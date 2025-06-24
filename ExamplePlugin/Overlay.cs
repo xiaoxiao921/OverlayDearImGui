@@ -182,6 +182,10 @@ public class Overlay
 
         ImGui.StyleColorsDark();
 
+        var fontPath = Path.Combine(AssetsFolderPath, "Fonts", "Bombardier-Regular.ttf");
+        var font = ImGui.GetIO().Fonts.AddFontFromFileTTF(fontPath, 16);
+        ImGui.GetIO().NativePtr->FontDefault = font;
+
         ImGuiWin32Impl.Init(hwnd);
 
         ImGuiDX11Impl.Init((void*)_device.NativePointer, (void*)_deviceContext.NativePointer);

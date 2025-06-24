@@ -2,7 +2,6 @@ using System;
 using System.Threading;
 using BepInEx;
 using ImGuiNET;
-using OverlayDearImGui.Windows;
 using UnityEngine;
 
 using SharedList = OverlayDearImGui.DisposableList<OverlayDearImGui.ClonedDrawData>;
@@ -19,15 +18,11 @@ public class OverlayDearImGui : BaseUnityPlugin
 
     private static Thread _renderThread;
 
-    private static bool _isMyUIOpen;
+    private static bool _isMyUIOpen = true;
 
     private void Awake()
     {
         Log.Init(Logger);
-
-        User32.MessageBox(IntPtr.Zero, "qd", "q", 0);
-
-        //this.gameObject.AddComponent<UnityMainThreadDispatcher>();
 
         _renderThread = new Thread(() =>
         {
@@ -41,7 +36,6 @@ public class OverlayDearImGui : BaseUnityPlugin
             }
         });
         _renderThread.Start();
-
     }
 
     public void Update()
@@ -104,72 +98,58 @@ public class OverlayDearImGui : BaseUnityPlugin
         }
     }
 
+    private static float _lastRefreshTime = -Mathf.Infinity;
+    private static GameObject[] _cachedInstances = Array.Empty<GameObject>();
+
     private static void MyUI()
     {
-        if (Overlay.IsOpen)
+        if (!Overlay.IsOpen)
+            return;
+
+        if (ImGui.BeginMainMenuBar())
         {
-            var dummy = true;
-            ImGui.ShowDemoWindow(ref dummy);
-
-            if (ImGui.BeginMainMenuBar())
+            if (ImGui.BeginMenu("Debug", true))
             {
-                if (ImGui.BeginMenu("MainBar", true))
+                if (ImGui.MenuItem("Open Debug Window", null, _isMyUIOpen))
                 {
-                    if (ImGui.MenuItem("MyTestPlugin", null, false, true))
-                    {
-                        _isMyUIOpen ^= true;
-                    }
-
-                    ImGui.EndMenu();
+                    _isMyUIOpen ^= true;
                 }
 
-                ImGui.EndMainMenuBar();
+                ImGui.EndMenu();
             }
 
-            if (ImGui.BeginMainMenuBar())
-            {
-                if (ImGui.BeginMenu("MainBar", true))
-                {
-                    if (ImGui.MenuItem("MyTestPlugin2", null, false, true))
-                    {
-                        _isMyUIOpen ^= true;
-                    }
-
-                    ImGui.EndMenu();
-                }
-
-                ImGui.EndMainMenuBar();
-            }
+            ImGui.EndMainMenuBar();
         }
 
-        if (_isMyUIOpen)
-        {
-            var dummy2 = true;
-            if (ImGui.Begin("My Mod Window", ref dummy2, (int)ImGuiWindowFlags.None))
-            {
-                ImGui.Text("hello there");
+        if (!_isMyUIOpen)
+            return;
 
-                if (ImGui.Button("Click me"))
-                {
-                    // Interacting with the unity api must be done from the unity main thread
-                    // Can just use the dispatcher shipped with the library for that
-                    //UnityMainThreadDispatcher.Enqueue(() =>
-                    //{
-                    var go = new GameObject();
-                    go.AddComponent<Stuff>();
-                    //});
-                }
+        if (Time.realtimeSinceStartup - _lastRefreshTime >= 2f)
+        {
+            _cachedInstances = UnityEngine.Object.FindObjectsOfType<GameObject>();
+            _lastRefreshTime = Time.realtimeSinceStartup;
+        }
+
+        if (ImGui.Begin("GameObject Debug Viewer", ImGuiWindowFlags.AlwaysAutoResize))
+        {
+            ImGui.Text($"Found {_cachedInstances.Length} GameObject instances:");
+
+            for (int i = 0; i < _cachedInstances.Length; i++)
+            {
+                var stuff = _cachedInstances[i];
+                if (stuff == null) continue;
+
+                var name = stuff.gameObject.name;
+                var pos = stuff.transform.position;
+                var active = stuff.gameObject.activeInHierarchy;
+
+                ImGui.Separator();
+                ImGui.Text($"[{i}] Name: {name}");
+                ImGui.Text($"    Active: {active}");
+                ImGui.Text($"    Position: {pos}");
             }
 
             ImGui.End();
         }
-    }
-}
-
-public class Stuff : MonoBehaviour
-{
-    private void Awake()
-    {
-        Log.Info("hello  from stuff!");
     }
 }
