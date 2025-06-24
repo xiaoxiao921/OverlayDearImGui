@@ -13,84 +13,11 @@ public static class Kernel32
 
     public const UInt32 INFINITE = 0xFFFFFFFF;
 
-    public const uint TOKEN_IMPERSONATE = 0x0004;
-    public const uint TOKEN_ASSIGN_PRIMARY = 0x0001;
-    public const uint TOKEN_ADJUST_DEFAULT = 0x0080;
-
-    [DllImport("kernel32.dll", SetLastError = true)]
-    public static extern UInt32 WaitForSingleObject(IntPtr hHandle, UInt32 dwMilliseconds);
-
     [DllImport("kernel32.dll")]
     public static extern void Sleep(uint dwMilliseconds);
 
-    [DllImport("kernel32.dll")]
-    public static extern IntPtr CreateEvent(IntPtr lpEventAttributes, bool bManualReset, bool bInitialState, string lpName);
-
-    [DllImport("kernel32.dll", SetLastError = true)]
-    public static extern IntPtr CreateToolhelp32Snapshot(SnapshotFlags dwFlags, uint th32ProcessID);
-
-    [DllImport("kernel32.dll", SetLastError = true)]
-    public static extern bool Process32First(IntPtr hSnapshot, ref PROCESSENTRY32 lppe);
-
-    [DllImport("advapi32.dll", SetLastError = true)]
-    public static extern bool SetThreadToken(IntPtr Thread, IntPtr Token);
-
-    [DllImport("advapi32.dll", SetLastError = true)]
-    public static extern bool RevertToSelf();
-
-    [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-    public static extern bool CreateProcessAsUser(IntPtr hToken, string lpApplicationName, IntPtr lpCommandLine, IntPtr lpProcessAttributes, IntPtr lpThreadAttributes, bool bInheritHandles, uint dwCreationFlags, IntPtr lpEnvironment, string lpCurrentDirectory, [In] ref STARTUPINFO lpStartupInfo, out PROCESS_INFORMATION lpProcessInformation);
-
-    [DllImport("kernel32.dll")]
-    public static extern void ExitProcess(uint uExitCode);
-
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     public static extern IntPtr GetModuleHandle([MarshalAs(UnmanagedType.LPWStr)] string lpModuleName);
-
-    [DllImport("advapi32.dll", SetLastError = true)]
-    public static extern bool SetTokenInformation(IntPtr TokenHandle, int TokenInformationClass, ref int TokenInformation, int TokenInformationLength);
-
-
-    [DllImport("kernel32.dll", SetLastError = true)]
-    public static extern bool Process32Next(IntPtr hSnapshot, ref PROCESSENTRY32 lppe);
-
-    [DllImport("advapi32.dll", SetLastError = true)]
-    public static extern bool DuplicateTokenEx(IntPtr hExistingToken, uint dwDesiredAccess, IntPtr lpTokenAttributes, SECURITY_IMPERSONATION_LEVEL ImpersonationLevel, TOKEN_TYPE TokenType, out IntPtr phNewToken);
-
-    [DllImport("kernel32.dll", SetLastError = true)]
-    public static extern IntPtr GetCurrentProcess();
-
-    [DllImport("kernel32.dll", SetLastError = true)]
-    public static extern IntPtr OpenProcess(uint dwDesiredAccess, bool bInheritHandle, uint dwProcessId);
-
-    [DllImport("advapi32.dll", SetLastError = true)]
-    public static extern bool OpenProcessToken(IntPtr ProcessHandle, uint DesiredAccess, out IntPtr TokenHandle);
-
-    [DllImport("advapi32.dll", SetLastError = true)]
-    public static extern bool GetTokenInformation(IntPtr TokenHandle, int TokenInformationClass, out uint TokenInformation, uint TokenInformationLength, out uint ReturnLength);
-
-    [DllImport("advapi32.dll", SetLastError = true)]
-    public static extern bool GetTokenInformation(IntPtr TokenHandle, int TokenInformationClass, out int TokenInformation, int TokenInformationLength, out uint ReturnLength);
-
-    public const uint TOKEN_QUERY = 0x0008;
-
-    public const uint TOKEN_DUPLICATE = 0x0002;
-
-    [DllImport("advapi32.dll", SetLastError = true)]
-    public static extern bool PrivilegeCheck(IntPtr ClientToken, ref PRIVILEGE_SET RequiredPrivileges, out bool pfResult);
-
-    [Flags]
-    public enum SnapshotFlags : uint
-    {
-        HeapList = 0x00000001,
-        Process = 0x00000002,
-        Thread = 0x00000004,
-        Module = 0x00000008,
-        Module32 = 0x00000010,
-        Inherit = 0x80000000,
-        All = 0x0000001F,
-        NoHeaps = 0x40000000
-    }
 
     /// <summary>
     /// Sets the bits of a 64-bit value to indicate the comparison operator to use for a specified operating system version attribute. 
@@ -178,32 +105,4 @@ public static class Kernel32
 
     [DllImport("kernel32.dll", SetLastError = true)]
     public static extern bool QueryPerformanceFrequency(out long frequency);
-}
-
-[StructLayout(LayoutKind.Explicit)]
-public struct LargeInteger
-{
-    [FieldOffset(0)]
-    public int Low;
-    [FieldOffset(4)]
-    public int High;
-    [FieldOffset(0)]
-    public long QuadPart;
-
-    // use only when QuadPart canot be passed
-    public long ToInt64()
-    {
-        return ((long)this.High << 32) | (uint)this.Low;
-    }
-
-    // just for demonstration
-    public static LargeInteger FromInt64(long value)
-    {
-        return new LargeInteger
-        {
-            Low = (int)(value),
-            High = (int)((value >> 32))
-        };
-    }
-
 }
