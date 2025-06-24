@@ -87,6 +87,11 @@ public static class ImGuiDX11Impl
     // Render function
     public static unsafe void RenderDrawData(ImDrawData* draw_data)
     {
+        if (draw_data == null)
+        {
+            return;
+        }
+
         // Avoid rendering when minimized
         if (draw_data->DisplaySize.x <= 0.0f || draw_data->DisplaySize.y <= 0.0f)
             return;

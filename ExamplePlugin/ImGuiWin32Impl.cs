@@ -626,7 +626,7 @@ public static unsafe class ImGuiWin32Impl
                     return new(1);
                 return IntPtr.Zero;
             case WindowMessage.WM_DEVICECHANGE:
-                const int DBT_DEVNODES_CHANGED = 0x0007;
+                //const int DBT_DEVNODES_CHANGED = 0x0007;
                 //if ((uint)wParam == DBT_DEVNODES_CHANGED)
                 //_wantUpdateHasGamepad = true;
                 return IntPtr.Zero;

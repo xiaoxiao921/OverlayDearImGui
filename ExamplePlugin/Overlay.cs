@@ -8,6 +8,8 @@ using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using SharpDX.Mathematics.Interop;
 
+using SharedList = OverlayDearImGui.DisposableList<OverlayDearImGui.ClonedDrawData>;
+
 namespace OverlayDearImGui;
 
 public class Overlay
@@ -17,18 +19,30 @@ public class Overlay
     private SwapChain _swapChain;
     private RenderTargetView _mainRenderTargetView;
 
+    //public static event Action OnRender;
+    public static Action OnRender;
+
     public static string AssetsFolderPath = "";
 
-    public static bool IsOpen = true;
+    public static bool IsOpen { get; private set; }
 
-    public static RECT GameRect;
+    private static RECT _gameRect;
+    public static RECT GameRect
+    {
+        get { return _gameRect; }
 
-    public static IntPtr GameHwnd;
+        private set
+        {
+            _gameRect = value;
+        }
+    }
 
-    public static uint g_ResizeWidth;
-    public static uint g_ResizeHeight;
+    public static IntPtr GameHwnd { get; private set; }
 
-    void CreateRenderTarget()
+    internal static uint ResizeWidth;
+    internal static uint ResizeHeight;
+
+    internal void CreateRenderTarget()
     {
         using (var backBuffer = _swapChain.GetBackBuffer<SharpDX.Direct3D11.Texture2D>(0))
         {
@@ -144,7 +158,7 @@ public class Overlay
 
         AssetsFolderPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Assets");
 
-        User32.GetWindowRect(GameHwnd, out GameRect);
+        User32.GetWindowRect(GameHwnd, out _gameRect);
 
         var (hwnd, wc) = WindowFactory.CreateClassicWindow("OverlayDearImGui");
 
@@ -172,7 +186,9 @@ public class Overlay
 
         ImGuiDX11Impl.Init((void*)_device.NativePointer, (void*)_deviceContext.NativePointer);
 
-        bool insertKeyPreviouslyDown = false;
+        bool openOverlayKeyPreviouslyDown = false;
+
+        ToggleOverlay(hwnd);
 
         var clearColor = new RawVector4(0f, 0, 0, 0f);
         bool done = false;
@@ -191,35 +207,20 @@ public class Overlay
                 }
             }
 
-            bool insertKeyDown = (User32.GetAsyncKeyState(User32.VirtualKey.VK_INSERT) & 0x8000) != 0;
+            bool openOverlayKeyDown = (User32.GetAsyncKeyState(User32.VirtualKey.VK_INSERT) & 0x8000) != 0;
 
-            if (insertKeyDown && !insertKeyPreviouslyDown)
+            if (openOverlayKeyDown && !openOverlayKeyPreviouslyDown)
             {
-                Overlay.IsOpen = !Overlay.IsOpen;
-
-                if (Overlay.IsOpen)
-                {
-                    User32.ShowWindow(hwnd, User32.ShowWindowCommand.Restore);
-                    User32.ShowWindow(hwnd, User32.ShowWindowCommand.Show);
-                    User32.SetForegroundWindow(hwnd);
-                }
-                else
-                {
-                    User32.ShowWindow(hwnd, User32.ShowWindowCommand.Hide);
-                    User32.ShowWindow(hwnd, User32.ShowWindowCommand.Minimize);
-
-                    User32.BringWindowToTop(GameHwnd);
-                    User32.SetForegroundWindow(GameHwnd);
-                }
+                ToggleOverlay(hwnd);
             }
 
-            insertKeyPreviouslyDown = insertKeyDown;
+            openOverlayKeyPreviouslyDown = openOverlayKeyDown;
 
-            if (g_ResizeWidth != 0 && g_ResizeHeight != 0)
+            if (ResizeWidth != 0 && ResizeHeight != 0)
             {
                 CleanupRenderTarget();
-                _swapChain.ResizeBuffers(0, (int)g_ResizeWidth, (int)g_ResizeHeight, Format.Unknown, 0);
-                g_ResizeWidth = g_ResizeHeight = 0;
+                _swapChain.ResizeBuffers(0, (int)ResizeWidth, (int)ResizeHeight, Format.Unknown, 0);
+                ResizeWidth = ResizeHeight = 0;
                 CreateRenderTarget();
             }
 
@@ -247,24 +248,31 @@ public class Overlay
                 User32.SetWindowPos(hwnd, (IntPtr)(-2) /* HWND_NOTOPMOST */, GameRect.X, GameRect.Y, GameRect.Width, GameRect.Height, User32.SWP_NOREDRAW);
             }
 
-            ImGuiDX11Impl.NewFrame();
-            ImGuiWin32Impl.NewFrame();
-            ImGui.NewFrame();
-
             User32.SetWindowDisplayAffinity(hwnd, User32.DisplayAffinity.None);
-
-            if (IsOpen)
-            {
-                ImGui.ShowDemoWindow();
-            }
-
-            ImGui.Render();
 
             //var clearColorWithAlpha = new RawColor4(clearColor.X * clearColor.W, clearColor.Y * clearColor.W, clearColor.Z * clearColor.W, clearColor.W);
             _deviceContext.OutputMerger.SetRenderTargets(_mainRenderTargetView);
             //_deviceContext.ClearRenderTargetView(_mainRenderTargetView, clearColorWithAlpha);
             _deviceContext.ClearRenderTargetView(_mainRenderTargetView, new(clearColor.X, clearColor.Y, clearColor.Z, clearColor.W));
-            ImGuiDX11Impl.RenderDrawData(ImGui.GetDrawData());
+
+            SharedList? newRenderData = null;
+
+            lock (OverlayDearImGui.DrawDataLock)
+            {
+                if (OverlayDearImGui.NextFrameDrawData != null)
+                {
+                    OverlayDearImGui.CurrentRenderDrawData?.Dispose(); // Done rendering previous frame
+                    OverlayDearImGui.CurrentRenderDrawData = OverlayDearImGui.NextFrameDrawData;
+                    OverlayDearImGui.NextFrameDrawData = null;
+                }
+
+                newRenderData = OverlayDearImGui.CurrentRenderDrawData;
+            }
+
+            if (newRenderData != null && newRenderData.Count > 0)
+            {
+                ImGuiDX11Impl.RenderDrawData(newRenderData[0].Data);
+            }
 
             _swapChain.Present(1, PresentFlags.None);
         }
@@ -275,6 +283,26 @@ public class Overlay
         CleanupDeviceD3D();
         User32.DestroyWindow(hwnd);
         User32.UnregisterClass(wc.lpszClassName, wc.hInstance);
+    }
+
+    private static unsafe void ToggleOverlay(IntPtr hwnd)
+    {
+        Overlay.IsOpen = !Overlay.IsOpen;
+
+        if (Overlay.IsOpen)
+        {
+            User32.ShowWindow(hwnd, User32.ShowWindowCommand.Restore);
+            User32.ShowWindow(hwnd, User32.ShowWindowCommand.Show);
+            User32.SetForegroundWindow(hwnd);
+        }
+        else
+        {
+            User32.ShowWindow(hwnd, User32.ShowWindowCommand.Hide);
+            User32.ShowWindow(hwnd, User32.ShowWindowCommand.Minimize);
+
+            User32.BringWindowToTop(GameHwnd);
+            User32.SetForegroundWindow(GameHwnd);
+        }
     }
 
     public static IntPtr WndProc(IntPtr hWnd, WindowMessage msg, IntPtr wParam, IntPtr lParam)
