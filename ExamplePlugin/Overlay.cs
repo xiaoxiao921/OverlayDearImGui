@@ -255,7 +255,7 @@ public class Overlay
             //_deviceContext.ClearRenderTargetView(_mainRenderTargetView, clearColorWithAlpha);
             _deviceContext.ClearRenderTargetView(_mainRenderTargetView, new(clearColor.X, clearColor.Y, clearColor.Z, clearColor.W));
 
-            SharedList? newRenderData = null;
+            SharedList newRenderData = null;
 
             lock (OverlayDearImGui.DrawDataLock)
             {

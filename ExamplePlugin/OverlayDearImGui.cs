@@ -77,9 +77,9 @@ public class OverlayDearImGui : BaseUnityPlugin
     }
 
     // freshly cloned by Unity thread
-    internal static SharedList? NextFrameDrawData;
+    internal static SharedList NextFrameDrawData;
     // being rendered by render thread
-    internal static SharedList? CurrentRenderDrawData;
+    internal static SharedList CurrentRenderDrawData;
     // sync lock
     internal static readonly object DrawDataLock = new();
 
