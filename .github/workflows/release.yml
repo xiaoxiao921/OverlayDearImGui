@@ -92,6 +92,7 @@ jobs:
           if [ -z "$existing_ts" ]; then
             if [ "$is_project_built" = false ]; then
               dotnet pack "$csproj" --configuration Release /p:PackageOutputPath="./ReleaseOutput" /p:OutputPath="./ReleaseOutput"
+              find "$dir" -name '*.nupkg' -type f -delete
             fi
 
             find "$dir" -name '*.pdb' -type f -delete
