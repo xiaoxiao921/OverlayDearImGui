@@ -238,7 +238,7 @@ public static partial class User32
     bool bMenu, uint dwExStyle);
 
     [DllImport("user32.dll")]
-    public static extern short GetAsyncKeyState(User32.VirtualKey vKey);
+    public static extern short GetAsyncKeyState(VirtualKey vKey);
 
     public static IntPtr CreateWindowW(
         [In, Optional] string lpClassName,

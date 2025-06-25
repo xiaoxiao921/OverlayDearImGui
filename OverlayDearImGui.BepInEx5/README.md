@@ -2,13 +2,15 @@
 
 Creates an overlay window that renders [Dear ImGui](https://github.com/ocornut/imgui) over the process of your choice.
 
+Does not work when the target application is exclusively full-screen.
+
 ## Usage
 
 The keybind for bringing up the cursor for interaction is by default the `Insert` key, which can be modified in the configuration file.
 
 ## Mod Developers
 
-Download this package and the OverlayDearImGui.Shared dependency. Add a reference to `ImGui.NET.dll` and `OverlayDearImGui.BepInEx5.dll` in your C# project.
+Download this package and the `OverlayDearImGui.Shared` dependency. Add a reference to `ImGui.NET.dll` (from Shared) and `OverlayDearImGui.BepInEx5.dll` (from this package) in your C# project.
 
 Above your `BaseUnityPlugin` class definition:
 

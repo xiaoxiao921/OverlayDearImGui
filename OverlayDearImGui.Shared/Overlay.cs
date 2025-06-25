@@ -27,12 +27,12 @@ public class Overlay
 
     /// Key for switching the overlay visibility.
     /// </summary>
-    public static IConfigEntry<User32.VirtualKey> OverlayToggle { get; internal set; }
-    internal const User32.VirtualKey OverlayToggleDefault = User32.VirtualKey.VK_INSERT;
+    public static IConfigEntry<VirtualKey> OverlayToggle { get; internal set; }
+    internal const VirtualKey OverlayToggleDefault = VirtualKey.Insert;
 
     public static string AssetsFolderPath { get; private set; } = "";
     public static string ImGuiIniConfigPath { get; private set; }
-    private const string IniFileName = "OverlayDearImGui_imgui.ini";
+    private const string IniFileName = "iDeathHD.OverlayDearImGui_imgui.ini";
 
     public static bool IsOpen { get; private set; }
 
@@ -223,7 +223,7 @@ public class Overlay
         CloneRenderData();
     }
 
-    public unsafe void Render(string windowName, string windowClass, string assetsFolderPath, string imguiIniConfigFolderPath, IConfigEntry<User32.VirtualKey> overlayToggleKeybind)
+    public unsafe void Render(string windowName, string windowClass, string assetsFolderPath, string imguiIniConfigFolderPath, IConfigEntry<VirtualKey> overlayToggleKeybind)
     {
         ImGuiIniConfigPath = Path.Combine(imguiIniConfigFolderPath, IniFileName);
         AssetsFolderPath = assetsFolderPath ?? Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Assets");
@@ -254,13 +254,13 @@ public class Overlay
         var io = ImGui.GetIO();
         io.ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard | ImGuiConfigFlags.NavEnableGamepad;
 
+        io.NativePtr->IniFilename = (byte*)Marshal.StringToHGlobalAnsi(ImGuiIniConfigPath);
+
         ImGui.StyleColorsDark();
 
         var fontPath = Path.Combine(AssetsFolderPath, "Fonts", "Bombardier-Regular.ttf");
-        var font = ImGui.GetIO().Fonts.AddFontFromFileTTF(fontPath, 16);
-        ImGui.GetIO().NativePtr->FontDefault = font;
-
-        ImGui.GetIO().NativePtr->IniFilename = (byte*)Marshal.StringToHGlobalAnsi(ImGuiIniConfigPath);
+        var font = io.Fonts.AddFontFromFileTTF(fontPath, 16);
+        io.NativePtr->FontDefault = font;
 
         ImGuiWin32Impl.Init(hwnd);
 
@@ -288,7 +288,7 @@ public class Overlay
                 }
             }
 
-            bool openOverlayKeyDown = (User32.GetAsyncKeyState(User32.VirtualKey.VK_INSERT) & 0x8000) != 0;
+            bool openOverlayKeyDown = (User32.GetAsyncKeyState(OverlayToggle.Get()) & 0x8000) != 0;
 
             if (openOverlayKeyDown && !openOverlayKeyPreviouslyDown)
             {

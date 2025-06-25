@@ -154,12 +154,12 @@ public static unsafe class ImGuiWin32Impl
         return true;
     }
 
-    static bool IsVkDown(User32.VirtualKey vk)
+    static bool IsVkDown(VirtualKey vk)
     {
         return (User32.GetKeyState(vk) & 0x8000) != 0;
     }
 
-    static void ImGui_ImplWin32_AddKeyEvent(ImGuiKey key, bool down, User32.VirtualKey native_keycode, int native_scancode = -1)
+    static void ImGui_ImplWin32_AddKeyEvent(ImGuiKey key, bool down, VirtualKey native_keycode, int native_scancode = -1)
     {
         var io = ImGui.GetIO();
         io.AddKeyEvent(key, down);
@@ -169,25 +169,25 @@ public static unsafe class ImGuiWin32Impl
     static void ImGui_ImplWin32_ProcessKeyEventsWorkarounds()
     {
         // Left & right Shift keys: when both are pressed together, Windows tend to not generate the WM_KEYUP event for the first released one.
-        if (ImGui.IsKeyDown(ImGuiKey.LeftShift) && !IsVkDown(User32.VirtualKey.VK_LSHIFT))
-            ImGui_ImplWin32_AddKeyEvent(ImGuiKey.LeftShift, false, User32.VirtualKey.VK_LSHIFT);
-        if (ImGui.IsKeyDown(ImGuiKey.RightShift) && !IsVkDown(User32.VirtualKey.VK_RSHIFT))
-            ImGui_ImplWin32_AddKeyEvent(ImGuiKey.RightShift, false, User32.VirtualKey.VK_RSHIFT);
+        if (ImGui.IsKeyDown(ImGuiKey.LeftShift) && !IsVkDown(VirtualKey.LeftShift))
+            ImGui_ImplWin32_AddKeyEvent(ImGuiKey.LeftShift, false, VirtualKey.LeftShift);
+        if (ImGui.IsKeyDown(ImGuiKey.RightShift) && !IsVkDown(VirtualKey.RightShift))
+            ImGui_ImplWin32_AddKeyEvent(ImGuiKey.RightShift, false, VirtualKey.RightShift);
 
         // Sometimes WM_KEYUP for Win key is not passed down to the app (e.g. for Win+V on some setups, according to GLFW).
-        if (ImGui.IsKeyDown(ImGuiKey.LeftSuper) && !IsVkDown(User32.VirtualKey.VK_LWIN))
-            ImGui_ImplWin32_AddKeyEvent(ImGuiKey.LeftSuper, false, User32.VirtualKey.VK_LWIN);
-        if (ImGui.IsKeyDown(ImGuiKey.RightSuper) && !IsVkDown(User32.VirtualKey.VK_RWIN))
-            ImGui_ImplWin32_AddKeyEvent(ImGuiKey.RightSuper, false, User32.VirtualKey.VK_RWIN);
+        if (ImGui.IsKeyDown(ImGuiKey.LeftSuper) && !IsVkDown(VirtualKey.LeftWindows))
+            ImGui_ImplWin32_AddKeyEvent(ImGuiKey.LeftSuper, false, VirtualKey.LeftWindows);
+        if (ImGui.IsKeyDown(ImGuiKey.RightSuper) && !IsVkDown(VirtualKey.RightWindows))
+            ImGui_ImplWin32_AddKeyEvent(ImGuiKey.RightSuper, false, VirtualKey.RightWindows);
     }
 
     public static void ImGui_ImplWin32_UpdateKeyModifiers()
     {
         var io = ImGui.GetIO();
-        io.AddKeyEvent(ImGuiKey.ModCtrl, IsVkDown(User32.VirtualKey.VK_CONTROL));
-        io.AddKeyEvent(ImGuiKey.ModShift, IsVkDown(User32.VirtualKey.VK_SHIFT));
-        io.AddKeyEvent(ImGuiKey.ModAlt, IsVkDown(User32.VirtualKey.VK_MENU));
-        io.AddKeyEvent(ImGuiKey.ModSuper, IsVkDown(User32.VirtualKey.VK_APPS));
+        io.AddKeyEvent(ImGuiKey.ModCtrl, IsVkDown(VirtualKey.Control));
+        io.AddKeyEvent(ImGuiKey.ModShift, IsVkDown(VirtualKey.Shift));
+        io.AddKeyEvent(ImGuiKey.ModAlt, IsVkDown(VirtualKey.Menu));
+        io.AddKeyEvent(ImGuiKey.ModSuper, IsVkDown(VirtualKey.Application));
     }
 
     public static void ImGui_ImplWin32_UpdateMouseData()
@@ -298,117 +298,117 @@ public static unsafe class ImGuiWin32Impl
         ImGui_ImplWin32_UpdateGamepads();
     }
 
-    public const User32.VirtualKey IM_VK_KEYPAD_ENTER = (User32.VirtualKey)((int)User32.VirtualKey.VK_RETURN + 256);
+    public const VirtualKey IM_VK_KEYPAD_ENTER = (VirtualKey)((int)VirtualKey.Return + 256);
 
     // Map VK_xxx to ImGuiKey_xxx.
-    public static ImGuiKey ImGui_ImplWin32_VirtualKeyToImGuiKey(User32.VirtualKey wParam)
+    public static ImGuiKey ImGui_ImplWin32_VirtualKeyToImGuiKey(VirtualKey wParam)
     {
         switch (wParam)
         {
-            case User32.VirtualKey.VK_TAB: return ImGuiKey.Tab;
-            case User32.VirtualKey.VK_LEFT: return ImGuiKey.LeftArrow;
-            case User32.VirtualKey.VK_RIGHT: return ImGuiKey.RightArrow;
-            case User32.VirtualKey.VK_UP: return ImGuiKey.UpArrow;
-            case User32.VirtualKey.VK_DOWN: return ImGuiKey.DownArrow;
-            case User32.VirtualKey.VK_PRIOR: return ImGuiKey.PageUp;
-            case User32.VirtualKey.VK_NEXT: return ImGuiKey.PageDown;
-            case User32.VirtualKey.VK_HOME: return ImGuiKey.Home;
-            case User32.VirtualKey.VK_END: return ImGuiKey.End;
-            case User32.VirtualKey.VK_INSERT: return ImGuiKey.Insert;
-            case User32.VirtualKey.VK_DELETE: return ImGuiKey.Delete;
-            case User32.VirtualKey.VK_BACK: return ImGuiKey.Backspace;
-            case User32.VirtualKey.VK_SPACE: return ImGuiKey.Space;
-            case User32.VirtualKey.VK_RETURN: return ImGuiKey.Enter;
-            case User32.VirtualKey.VK_ESCAPE: return ImGuiKey.Escape;
-            case User32.VirtualKey.VK_OEM_7: return ImGuiKey.Apostrophe;
-            case User32.VirtualKey.VK_OEM_COMMA: return ImGuiKey.Comma;
-            case User32.VirtualKey.VK_OEM_MINUS: return ImGuiKey.Minus;
-            case User32.VirtualKey.VK_OEM_PERIOD: return ImGuiKey.Period;
-            case User32.VirtualKey.VK_OEM_2: return ImGuiKey.Slash;
-            case User32.VirtualKey.VK_OEM_1: return ImGuiKey.Semicolon;
-            case User32.VirtualKey.VK_OEM_PLUS: return ImGuiKey.Equal;
-            case User32.VirtualKey.VK_OEM_4: return ImGuiKey.LeftBracket;
-            case User32.VirtualKey.VK_OEM_5: return ImGuiKey.Backslash;
-            case User32.VirtualKey.VK_OEM_6: return ImGuiKey.RightBracket;
-            case User32.VirtualKey.VK_OEM_3: return ImGuiKey.GraveAccent;
-            case User32.VirtualKey.VK_CAPITAL: return ImGuiKey.CapsLock;
-            case User32.VirtualKey.VK_SCROLL: return ImGuiKey.ScrollLock;
-            case User32.VirtualKey.VK_NUMLOCK: return ImGuiKey.NumLock;
-            case User32.VirtualKey.VK_SNAPSHOT: return ImGuiKey.PrintScreen;
-            case User32.VirtualKey.VK_PAUSE: return ImGuiKey.Pause;
-            case User32.VirtualKey.VK_NUMPAD0: return ImGuiKey.Keypad0;
-            case User32.VirtualKey.VK_NUMPAD1: return ImGuiKey.Keypad1;
-            case User32.VirtualKey.VK_NUMPAD2: return ImGuiKey.Keypad2;
-            case User32.VirtualKey.VK_NUMPAD3: return ImGuiKey.Keypad3;
-            case User32.VirtualKey.VK_NUMPAD4: return ImGuiKey.Keypad4;
-            case User32.VirtualKey.VK_NUMPAD5: return ImGuiKey.Keypad5;
-            case User32.VirtualKey.VK_NUMPAD6: return ImGuiKey.Keypad6;
-            case User32.VirtualKey.VK_NUMPAD7: return ImGuiKey.Keypad7;
-            case User32.VirtualKey.VK_NUMPAD8: return ImGuiKey.Keypad8;
-            case User32.VirtualKey.VK_NUMPAD9: return ImGuiKey.Keypad9;
-            case User32.VirtualKey.VK_DECIMAL: return ImGuiKey.KeypadDecimal;
-            case User32.VirtualKey.VK_DIVIDE: return ImGuiKey.KeypadDivide;
-            case User32.VirtualKey.VK_MULTIPLY: return ImGuiKey.KeypadMultiply;
-            case User32.VirtualKey.VK_SUBTRACT: return ImGuiKey.KeypadSubtract;
-            case User32.VirtualKey.VK_ADD: return ImGuiKey.KeypadAdd;
+            case VirtualKey.Tab: return ImGuiKey.Tab;
+            case VirtualKey.Left: return ImGuiKey.LeftArrow;
+            case VirtualKey.Right: return ImGuiKey.RightArrow;
+            case VirtualKey.Up: return ImGuiKey.UpArrow;
+            case VirtualKey.Down: return ImGuiKey.DownArrow;
+            case VirtualKey.Prior: return ImGuiKey.PageUp;
+            case VirtualKey.Next: return ImGuiKey.PageDown;
+            case VirtualKey.Home: return ImGuiKey.Home;
+            case VirtualKey.End: return ImGuiKey.End;
+            case VirtualKey.Insert: return ImGuiKey.Insert;
+            case VirtualKey.Delete: return ImGuiKey.Delete;
+            case VirtualKey.Back: return ImGuiKey.Backspace;
+            case VirtualKey.Space: return ImGuiKey.Space;
+            case VirtualKey.Return: return ImGuiKey.Enter;
+            case VirtualKey.Escape: return ImGuiKey.Escape;
+            case VirtualKey.OEM7: return ImGuiKey.Apostrophe;
+            case VirtualKey.OEMComma: return ImGuiKey.Comma;
+            case VirtualKey.OEMMinus: return ImGuiKey.Minus;
+            case VirtualKey.OEMPeriod: return ImGuiKey.Period;
+            case VirtualKey.OEM2: return ImGuiKey.Slash;
+            case VirtualKey.OEM1: return ImGuiKey.Semicolon;
+            case VirtualKey.OEMPlus: return ImGuiKey.Equal;
+            case VirtualKey.OEM4: return ImGuiKey.LeftBracket;
+            case VirtualKey.OEM5: return ImGuiKey.Backslash;
+            case VirtualKey.OEM6: return ImGuiKey.RightBracket;
+            case VirtualKey.OEM3: return ImGuiKey.GraveAccent;
+            case VirtualKey.CapsLock: return ImGuiKey.CapsLock;
+            case VirtualKey.ScrollLock: return ImGuiKey.ScrollLock;
+            case VirtualKey.NumLock: return ImGuiKey.NumLock;
+            case VirtualKey.Snapshot: return ImGuiKey.PrintScreen;
+            case VirtualKey.Pause: return ImGuiKey.Pause;
+            case VirtualKey.Numpad0: return ImGuiKey.Keypad0;
+            case VirtualKey.Numpad1: return ImGuiKey.Keypad1;
+            case VirtualKey.Numpad2: return ImGuiKey.Keypad2;
+            case VirtualKey.Numpad3: return ImGuiKey.Keypad3;
+            case VirtualKey.Numpad4: return ImGuiKey.Keypad4;
+            case VirtualKey.Numpad5: return ImGuiKey.Keypad5;
+            case VirtualKey.Numpad6: return ImGuiKey.Keypad6;
+            case VirtualKey.Numpad7: return ImGuiKey.Keypad7;
+            case VirtualKey.Numpad8: return ImGuiKey.Keypad8;
+            case VirtualKey.Numpad9: return ImGuiKey.Keypad9;
+            case VirtualKey.Decimal: return ImGuiKey.KeypadDecimal;
+            case VirtualKey.Divide: return ImGuiKey.KeypadDivide;
+            case VirtualKey.Multiply: return ImGuiKey.KeypadMultiply;
+            case VirtualKey.Subtract: return ImGuiKey.KeypadSubtract;
+            case VirtualKey.Add: return ImGuiKey.KeypadAdd;
             case IM_VK_KEYPAD_ENTER: return ImGuiKey.KeypadEnter;
-            case User32.VirtualKey.VK_LSHIFT: return ImGuiKey.LeftShift;
-            case User32.VirtualKey.VK_LCONTROL: return ImGuiKey.LeftCtrl;
-            case User32.VirtualKey.VK_LMENU: return ImGuiKey.LeftAlt;
-            case User32.VirtualKey.VK_LWIN: return ImGuiKey.LeftSuper;
-            case User32.VirtualKey.VK_RSHIFT: return ImGuiKey.RightShift;
-            case User32.VirtualKey.VK_RCONTROL: return ImGuiKey.RightCtrl;
-            case User32.VirtualKey.VK_RMENU: return ImGuiKey.RightAlt;
-            case User32.VirtualKey.VK_RWIN: return ImGuiKey.RightSuper;
-            case User32.VirtualKey.VK_APPS: return ImGuiKey.Menu;
-            case (User32.VirtualKey)'0': return ImGuiKey._0;
-            case (User32.VirtualKey)'1': return ImGuiKey._1;
-            case (User32.VirtualKey)'2': return ImGuiKey._2;
-            case (User32.VirtualKey)'3': return ImGuiKey._3;
-            case (User32.VirtualKey)'4': return ImGuiKey._4;
-            case (User32.VirtualKey)'5': return ImGuiKey._5;
-            case (User32.VirtualKey)'6': return ImGuiKey._6;
-            case (User32.VirtualKey)'7': return ImGuiKey._7;
-            case (User32.VirtualKey)'8': return ImGuiKey._8;
-            case (User32.VirtualKey)'9': return ImGuiKey._9;
-            case (User32.VirtualKey)'A': return ImGuiKey.A;
-            case (User32.VirtualKey)'B': return ImGuiKey.B;
-            case (User32.VirtualKey)'C': return ImGuiKey.C;
-            case (User32.VirtualKey)'D': return ImGuiKey.D;
-            case (User32.VirtualKey)'E': return ImGuiKey.E;
-            case (User32.VirtualKey)'F': return ImGuiKey.F;
-            case (User32.VirtualKey)'G': return ImGuiKey.G;
-            case (User32.VirtualKey)'H': return ImGuiKey.H;
-            case (User32.VirtualKey)'I': return ImGuiKey.I;
-            case (User32.VirtualKey)'J': return ImGuiKey.J;
-            case (User32.VirtualKey)'K': return ImGuiKey.K;
-            case (User32.VirtualKey)'L': return ImGuiKey.L;
-            case (User32.VirtualKey)'M': return ImGuiKey.M;
-            case (User32.VirtualKey)'N': return ImGuiKey.N;
-            case (User32.VirtualKey)'O': return ImGuiKey.O;
-            case (User32.VirtualKey)'P': return ImGuiKey.P;
-            case (User32.VirtualKey)'Q': return ImGuiKey.Q;
-            case (User32.VirtualKey)'R': return ImGuiKey.R;
-            case (User32.VirtualKey)'S': return ImGuiKey.S;
-            case (User32.VirtualKey)'T': return ImGuiKey.T;
-            case (User32.VirtualKey)'U': return ImGuiKey.U;
-            case (User32.VirtualKey)'V': return ImGuiKey.V;
-            case (User32.VirtualKey)'W': return ImGuiKey.W;
-            case (User32.VirtualKey)'X': return ImGuiKey.X;
-            case (User32.VirtualKey)'Y': return ImGuiKey.Y;
-            case (User32.VirtualKey)'Z': return ImGuiKey.Z;
-            case User32.VirtualKey.VK_F1: return ImGuiKey.F1;
-            case User32.VirtualKey.VK_F2: return ImGuiKey.F2;
-            case User32.VirtualKey.VK_F3: return ImGuiKey.F3;
-            case User32.VirtualKey.VK_F4: return ImGuiKey.F4;
-            case User32.VirtualKey.VK_F5: return ImGuiKey.F5;
-            case User32.VirtualKey.VK_F6: return ImGuiKey.F6;
-            case User32.VirtualKey.VK_F7: return ImGuiKey.F7;
-            case User32.VirtualKey.VK_F8: return ImGuiKey.F8;
-            case User32.VirtualKey.VK_F9: return ImGuiKey.F9;
-            case User32.VirtualKey.VK_F10: return ImGuiKey.F10;
-            case User32.VirtualKey.VK_F11: return ImGuiKey.F11;
-            case User32.VirtualKey.VK_F12: return ImGuiKey.F12;
+            case VirtualKey.LeftShift: return ImGuiKey.LeftShift;
+            case VirtualKey.LeftControl: return ImGuiKey.LeftCtrl;
+            case VirtualKey.LeftMenu: return ImGuiKey.LeftAlt;
+            case VirtualKey.LeftWindows: return ImGuiKey.LeftSuper;
+            case VirtualKey.RightShift: return ImGuiKey.RightShift;
+            case VirtualKey.RightControl: return ImGuiKey.RightCtrl;
+            case VirtualKey.RightMenu: return ImGuiKey.RightAlt;
+            case VirtualKey.RightWindows: return ImGuiKey.RightSuper;
+            case VirtualKey.Application: return ImGuiKey.Menu;
+            case (VirtualKey)'0': return ImGuiKey._0;
+            case (VirtualKey)'1': return ImGuiKey._1;
+            case (VirtualKey)'2': return ImGuiKey._2;
+            case (VirtualKey)'3': return ImGuiKey._3;
+            case (VirtualKey)'4': return ImGuiKey._4;
+            case (VirtualKey)'5': return ImGuiKey._5;
+            case (VirtualKey)'6': return ImGuiKey._6;
+            case (VirtualKey)'7': return ImGuiKey._7;
+            case (VirtualKey)'8': return ImGuiKey._8;
+            case (VirtualKey)'9': return ImGuiKey._9;
+            case (VirtualKey)'A': return ImGuiKey.A;
+            case (VirtualKey)'B': return ImGuiKey.B;
+            case (VirtualKey)'C': return ImGuiKey.C;
+            case (VirtualKey)'D': return ImGuiKey.D;
+            case (VirtualKey)'E': return ImGuiKey.E;
+            case (VirtualKey)'F': return ImGuiKey.F;
+            case (VirtualKey)'G': return ImGuiKey.G;
+            case (VirtualKey)'H': return ImGuiKey.H;
+            case (VirtualKey)'I': return ImGuiKey.I;
+            case (VirtualKey)'J': return ImGuiKey.J;
+            case (VirtualKey)'K': return ImGuiKey.K;
+            case (VirtualKey)'L': return ImGuiKey.L;
+            case (VirtualKey)'M': return ImGuiKey.M;
+            case (VirtualKey)'N': return ImGuiKey.N;
+            case (VirtualKey)'O': return ImGuiKey.O;
+            case (VirtualKey)'P': return ImGuiKey.P;
+            case (VirtualKey)'Q': return ImGuiKey.Q;
+            case (VirtualKey)'R': return ImGuiKey.R;
+            case (VirtualKey)'S': return ImGuiKey.S;
+            case (VirtualKey)'T': return ImGuiKey.T;
+            case (VirtualKey)'U': return ImGuiKey.U;
+            case (VirtualKey)'V': return ImGuiKey.V;
+            case (VirtualKey)'W': return ImGuiKey.W;
+            case (VirtualKey)'X': return ImGuiKey.X;
+            case (VirtualKey)'Y': return ImGuiKey.Y;
+            case (VirtualKey)'Z': return ImGuiKey.Z;
+            case VirtualKey.F1: return ImGuiKey.F1;
+            case VirtualKey.F2: return ImGuiKey.F2;
+            case VirtualKey.F3: return ImGuiKey.F3;
+            case VirtualKey.F4: return ImGuiKey.F4;
+            case VirtualKey.F5: return ImGuiKey.F5;
+            case VirtualKey.F6: return ImGuiKey.F6;
+            case VirtualKey.F7: return ImGuiKey.F7;
+            case VirtualKey.F8: return ImGuiKey.F8;
+            case VirtualKey.F9: return ImGuiKey.F9;
+            case VirtualKey.F10: return ImGuiKey.F10;
+            case VirtualKey.F11: return ImGuiKey.F11;
+            case VirtualKey.F12: return ImGuiKey.F12;
             default: return ImGuiKey.None;
         }
     }
@@ -563,10 +563,10 @@ public static unsafe class ImGuiWin32Impl
 
                         // Obtain virtual key code
                         // (keypad enter doesn't have its own... VK_RETURN with KF_EXTENDED flag means keypad enter, see IM_VK_KEYPAD_ENTER definition for details, it is mapped to ImGuiKey_KeyPadEnter.)
-                        User32.VirtualKey vk = (User32.VirtualKey)wParam;
+                        VirtualKey vk = (VirtualKey)wParam;
 
 
-                        bool isEnter = (User32.VirtualKey)wParam == User32.VirtualKey.VK_RETURN;
+                        bool isEnter = (VirtualKey)wParam == VirtualKey.Return;
                         bool hasExtendedKeyFlag = (HIWORD(lParam) & (ushort)User32.KeyFlag.KF_EXTENDED) != 0;
                         if (isEnter && hasExtendedKeyFlag)
                             vk = IM_VK_KEYPAD_ENTER;
@@ -578,21 +578,21 @@ public static unsafe class ImGuiWin32Impl
                             ImGui_ImplWin32_AddKeyEvent(key, is_key_down, vk, scancode);
 
                         // Submit individual left/right modifier events
-                        if (vk == User32.VirtualKey.VK_SHIFT)
+                        if (vk == VirtualKey.Shift)
                         {
                             // Important: Shift keys tend to get stuck when pressed together, missing key-up events are corrected in ImGui_ImplWin32_ProcessKeyEventsWorkarounds()
-                            if (IsVkDown(User32.VirtualKey.VK_LSHIFT) == is_key_down) { ImGui_ImplWin32_AddKeyEvent(ImGuiKey.LeftShift, is_key_down, User32.VirtualKey.VK_LSHIFT, scancode); }
-                            if (IsVkDown(User32.VirtualKey.VK_RSHIFT) == is_key_down) { ImGui_ImplWin32_AddKeyEvent(ImGuiKey.RightShift, is_key_down, User32.VirtualKey.VK_RSHIFT, scancode); }
+                            if (IsVkDown(VirtualKey.LeftShift) == is_key_down) { ImGui_ImplWin32_AddKeyEvent(ImGuiKey.LeftShift, is_key_down, VirtualKey.LeftShift, scancode); }
+                            if (IsVkDown(VirtualKey.RightShift) == is_key_down) { ImGui_ImplWin32_AddKeyEvent(ImGuiKey.RightShift, is_key_down, VirtualKey.RightShift, scancode); }
                         }
-                        else if (vk == User32.VirtualKey.VK_CONTROL)
+                        else if (vk == VirtualKey.Control)
                         {
-                            if (IsVkDown(User32.VirtualKey.VK_LCONTROL) == is_key_down) { ImGui_ImplWin32_AddKeyEvent(ImGuiKey.LeftCtrl, is_key_down, User32.VirtualKey.VK_LCONTROL, scancode); }
-                            if (IsVkDown(User32.VirtualKey.VK_RCONTROL) == is_key_down) { ImGui_ImplWin32_AddKeyEvent(ImGuiKey.RightCtrl, is_key_down, User32.VirtualKey.VK_RCONTROL, scancode); }
+                            if (IsVkDown(VirtualKey.LeftControl) == is_key_down) { ImGui_ImplWin32_AddKeyEvent(ImGuiKey.LeftCtrl, is_key_down, VirtualKey.LeftControl, scancode); }
+                            if (IsVkDown(VirtualKey.RightControl) == is_key_down) { ImGui_ImplWin32_AddKeyEvent(ImGuiKey.RightCtrl, is_key_down, VirtualKey.RightControl, scancode); }
                         }
-                        else if (vk == User32.VirtualKey.VK_MENU)
+                        else if (vk == VirtualKey.Menu)
                         {
-                            if (IsVkDown(User32.VirtualKey.VK_LMENU) == is_key_down) { ImGui_ImplWin32_AddKeyEvent(ImGuiKey.LeftAlt, is_key_down, User32.VirtualKey.VK_LMENU, scancode); }
-                            if (IsVkDown(User32.VirtualKey.VK_RMENU) == is_key_down) { ImGui_ImplWin32_AddKeyEvent(ImGuiKey.RightAlt, is_key_down, User32.VirtualKey.VK_RMENU, scancode); }
+                            if (IsVkDown(VirtualKey.LeftMenu) == is_key_down) { ImGui_ImplWin32_AddKeyEvent(ImGuiKey.LeftAlt, is_key_down, VirtualKey.LeftMenu, scancode); }
+                            if (IsVkDown(VirtualKey.RightMenu) == is_key_down) { ImGui_ImplWin32_AddKeyEvent(ImGuiKey.RightAlt, is_key_down, VirtualKey.RightMenu, scancode); }
                         }
                     }
                     return IntPtr.Zero;
