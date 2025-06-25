@@ -22,6 +22,14 @@ outdir = "./build"
 source = "./ReleaseOutput"
 target = "./plugins/OverlayDearImGui.Shared"
 
+[[build.copy]]
+source = "../libs/netstandard2.0"
+target = "./plugins/OverlayDearImGui.Shared"
+
+[[build.copy]]
+source = "./Assets"
+target = "./plugins/OverlayDearImGui.Shared/Assets"
+
 [publish]
 repository = "https://thunderstore.io"
 communities = ["riskofrain2"]

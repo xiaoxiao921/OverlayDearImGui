@@ -47,12 +47,15 @@ jobs:
         # Find all csproj files
         mapfile -t csproj_paths < <(find . -name '*.csproj')
 
+        # Sort to ensure OverlayDearImGui.Shared comes first
+        csproj_paths=($(printf '%s\n' "${csproj_paths[@]}" | sort -r | grep OverlayDearImGui.Shared.csproj; printf '%s\n' "${csproj_paths[@]}" | grep -v OverlayDearImGui.Shared.csproj))
+
         for csproj in "${csproj_paths[@]}"; do
           dir=$(dirname "$csproj")
           base=$(basename "$csproj" .csproj)
           namespace=$(yq e '.package.namespace' "$dir/thunderstore.toml")
           name_underscore_separator=$(yq e '.package.name' "$dir/thunderstore.toml")
-          version=$(yq e '.package.versionNumber' OverlayDearImGui.BepInEx5/thunderstore.toml)
+          version=$(yq e '.package.versionNumber' "$dir/thunderstore.toml")
           name_dot_separator="${name_underscore_separator// /.}"
           nuget_package_name="${name_dot_separator}"
 

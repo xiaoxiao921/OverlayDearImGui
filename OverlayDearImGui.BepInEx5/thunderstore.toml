@@ -4,7 +4,7 @@ schemaVersion = "0.0.1"
 
 [package]
 namespace = "xiaoxiao921"
-name = "OverlayDearImGui_BE5_NS20"
+name = "OverlayDearImGui_BepInEx5"
 versionNumber = "2.0.0"
 description = "Overlay Window for Dear ImGui"
 websiteUrl = "https://github.com/xiaoxiao921/OverlayDearImGui"
@@ -20,12 +20,16 @@ readme = "./README.md"
 outdir = "./build"
 
 [[build.copy]]
-source = "./ReleaseOutput/OverlayDearImGui.dll"
-target = "./plugins/OverlayDearImGui/OverlayDearImGui.dll"
+source = "./CHANGELOG.md"
+target = "./CHANGELOG.md"
 
 [[build.copy]]
-source = "./ReleaseOutput/OverlayDearImGui.xml"
-target = "./plugins/OverlayDearImGui/OverlayDearImGui.xml"
+source = "./ReleaseOutput/OverlayDearImGui.BepInEx5.dll"
+target = "./plugins/OverlayDearImGui.BepInEx5/OverlayDearImGui.BepInEx5.dll"
+
+[[build.copy]]
+source = "./ReleaseOutput/OverlayDearImGui.BepInEx5.xml"
+target = "./plugins/OverlayDearImGui.BepInEx5/OverlayDearImGui.BepInEx5.xml"
 
 [publish]
 repository = "https://thunderstore.io"

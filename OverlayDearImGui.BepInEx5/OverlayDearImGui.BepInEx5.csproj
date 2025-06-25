@@ -22,7 +22,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\OverlayDearImGui.Shared\OverlayDearImGui.Shared.csproj"/>
+		<ProjectReference Include="..\OverlayDearImGui.Shared\OverlayDearImGui.Shared.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
