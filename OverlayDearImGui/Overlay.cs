@@ -19,10 +19,9 @@ public class Overlay
     private SwapChain _swapChain;
     private RenderTargetView _mainRenderTargetView;
 
-    //public static event Action OnRender;
-    public static Action OnRender;
+    public static event Action OnRender;
 
-    public static string AssetsFolderPath = "";
+    public static string AssetsFolderPath { get; private set; } = "";
 
     public static bool IsOpen { get; private set; }
 
@@ -39,8 +38,15 @@ public class Overlay
 
     public static IntPtr GameHwnd { get; private set; }
 
-    internal static uint ResizeWidth;
-    internal static uint ResizeHeight;
+    private static uint _resizeWidth;
+    private static uint _resizeHeight;
+
+    // freshly cloned by non-render thread
+    private static SharedList _nextFrameDrawData;
+    // being rendered by render thread
+    private static SharedList _currentRenderDrawData;
+    // sync lock
+    private static readonly object _drawDataLock = new();
 
     internal void CreateRenderTarget()
     {
@@ -152,6 +158,95 @@ public class Overlay
         return true;
     }
 
+    private static unsafe void CloneRenderData()
+    {
+        var pio = ImGui.GetPlatformIO();
+        var newData = new SharedList(pio.Viewports.Size);
+
+        for (int i = 0; i < pio.Viewports.Size; ++i)
+        {
+            var vp = pio.Viewports[i];
+            if (vp.Flags.HasFlag(ImGuiViewportFlags.IsMinimized))
+                continue;
+
+            newData.Add(new(new(vp.DrawData)));
+        }
+
+        lock (_drawDataLock)
+        {
+            _nextFrameDrawData?.Dispose();
+            _nextFrameDrawData = newData;
+        }
+    }
+
+    internal static void UpdateOverlayDrawData()
+    {
+        if (ImGui.GetCurrentContext() == null)
+        {
+            return;
+        }
+
+        ImGuiDX11Impl.NewFrame();
+        ImGuiWin32Impl.NewFrame();
+        ImGui.NewFrame();
+
+        if (Overlay.IsOpen)
+        {
+            if (ImGui.BeginMainMenuBar())
+            {
+                ImGui.SetNextWindowSize(new(400.0f, 0));
+                if (ImGui.BeginMenu("GUI"))
+                {
+                    //if (ImGui.Checkbox("Open GUI At Startup", &m_is_open_at_startup->ref< bool > ()))
+                    {
+                        //save_pref();
+                    }
+
+                    //if (ImGui.Hotkey("Open GUI Keybind", g_gui_toggle))
+                    {
+                        //editing_gui_keybind = true;
+                    }
+
+                    ImGui.EndMenu();
+                }
+
+                if (ImGui.BeginMenu("Mods"))
+                {
+                    //g_lua_manager->draw_menu_bar_callbacks();
+
+                    ImGui.EndMenu();
+                }
+
+                if (ImGui.BeginMenu("Config"))
+                {
+                    //toml_v2::config_file::imgui_config_file();
+
+                    ImGui.EndMenu();
+                }
+
+                ImGui.EndMainMenuBar();
+            }
+
+            if (Overlay.OnRender != null)
+            {
+                foreach (Action item in Overlay.OnRender.GetInvocationList())
+                {
+                    try
+                    {
+                        item();
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error(e);
+                    }
+                }
+            }
+        }
+
+        ImGui.Render();
+        CloneRenderData();
+    }
+
     public unsafe void Render(string windowName, string windowClass)
     {
         GameHwnd = User32.FindWindowW(windowClass, windowName);
@@ -195,6 +290,7 @@ public class Overlay
         ToggleOverlay(hwnd);
 
         var clearColor = new RawVector4(0f, 0, 0, 0f);
+
         bool done = false;
         while (!done)
         {
@@ -220,16 +316,16 @@ public class Overlay
 
             openOverlayKeyPreviouslyDown = openOverlayKeyDown;
 
-            if (ResizeWidth != 0 && ResizeHeight != 0)
+            if (_resizeWidth != 0 && _resizeHeight != 0)
             {
                 CleanupRenderTarget();
-                _swapChain.ResizeBuffers(0, (int)ResizeWidth, (int)ResizeHeight, Format.Unknown, 0);
-                ResizeWidth = ResizeHeight = 0;
+                _swapChain.ResizeBuffers(0, (int)_resizeWidth, (int)_resizeHeight, Format.Unknown, 0);
+                _resizeWidth = _resizeHeight = 0;
                 CreateRenderTarget();
             }
 
-            var FHwnd = User32.GetForegroundWindow();
-            if (!(FHwnd == hwnd || FHwnd == GameHwnd))
+            var currentForegroundWindow = User32.GetForegroundWindow();
+            if (!(currentForegroundWindow == hwnd || currentForegroundWindow == GameHwnd))
             {
                 Kernel32.Sleep(16);
             }
@@ -254,23 +350,23 @@ public class Overlay
 
             User32.SetWindowDisplayAffinity(hwnd, User32.DisplayAffinity.None);
 
-            //var clearColorWithAlpha = new RawColor4(clearColor.X * clearColor.W, clearColor.Y * clearColor.W, clearColor.Z * clearColor.W, clearColor.W);
             _deviceContext.OutputMerger.SetRenderTargets(_mainRenderTargetView);
+            //var clearColorWithAlpha = new RawColor4(clearColor.X * clearColor.W, clearColor.Y * clearColor.W, clearColor.Z * clearColor.W, clearColor.W);
             //_deviceContext.ClearRenderTargetView(_mainRenderTargetView, clearColorWithAlpha);
             _deviceContext.ClearRenderTargetView(_mainRenderTargetView, new(clearColor.X, clearColor.Y, clearColor.Z, clearColor.W));
 
             SharedList newRenderData = null;
 
-            lock (OverlayDearImGui.DrawDataLock)
+            lock (_drawDataLock)
             {
-                if (OverlayDearImGui.NextFrameDrawData != null)
+                if (_nextFrameDrawData != null)
                 {
-                    OverlayDearImGui.CurrentRenderDrawData?.Dispose(); // Done rendering previous frame
-                    OverlayDearImGui.CurrentRenderDrawData = OverlayDearImGui.NextFrameDrawData;
-                    OverlayDearImGui.NextFrameDrawData = null;
+                    _currentRenderDrawData?.Dispose(); // Done rendering previous frame
+                    _currentRenderDrawData = _nextFrameDrawData;
+                    _nextFrameDrawData = null;
                 }
 
-                newRenderData = OverlayDearImGui.CurrentRenderDrawData;
+                newRenderData = _currentRenderDrawData;
             }
 
             if (newRenderData != null && newRenderData.Count > 0)

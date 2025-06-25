@@ -4,17 +4,15 @@ using BepInEx;
 using ImGuiNET;
 using UnityEngine;
 
-using SharedList = OverlayDearImGui.DisposableList<OverlayDearImGui.ClonedDrawData>;
-
 namespace OverlayDearImGui;
 
+[AutoThunderstoreVersion.AutoVersion]
 [BepInPlugin(PluginGUID, PluginName, PluginVersion)]
-public class OverlayDearImGui : BaseUnityPlugin
+public partial class OverlayDearImGui : BaseUnityPlugin
 {
     public const string PluginGUID = PluginAuthor + "." + PluginName;
     public const string PluginAuthor = "iDeathHD";
     public const string PluginName = "OverlayDearImGui";
-    public const string PluginVersion = "2.0.0";
 
     private static Thread _renderThread;
 
@@ -38,64 +36,9 @@ public class OverlayDearImGui : BaseUnityPlugin
         _renderThread.Start();
     }
 
-    public void Update()
+    private void Update()
     {
-        if (ImGui.GetCurrentContext() == null)
-        {
-            return;
-        }
-
-        ImGuiDX11Impl.NewFrame();
-        ImGuiWin32Impl.NewFrame();
-        ImGui.NewFrame();
-
-        MyUI();
-
-        if (Overlay.IsOpen && Overlay.OnRender != null)
-        {
-            foreach (Action item in Overlay.OnRender.GetInvocationList())
-            {
-                try
-                {
-                    item();
-                }
-                catch (Exception e)
-                {
-                    Log.Error(e);
-                }
-            }
-        }
-
-        ImGui.Render();
-        CloneRenderData();
-    }
-
-    // freshly cloned by Unity thread
-    internal static SharedList NextFrameDrawData;
-    // being rendered by render thread
-    internal static SharedList CurrentRenderDrawData;
-    // sync lock
-    internal static readonly object DrawDataLock = new();
-
-    private static unsafe void CloneRenderData()
-    {
-        var pio = ImGui.GetPlatformIO();
-        var newData = new SharedList(pio.Viewports.Size);
-
-        for (int i = 0; i < pio.Viewports.Size; ++i)
-        {
-            var vp = pio.Viewports[i];
-            if (vp.Flags.HasFlag(ImGuiViewportFlags.IsMinimized))
-                continue;
-
-            newData.Add(new(new(vp.DrawData)));
-        }
-
-        lock (DrawDataLock)
-        {
-            NextFrameDrawData?.Dispose();
-            NextFrameDrawData = newData;
-        }
+        Overlay.UpdateOverlayDrawData();
     }
 
     private static float _lastRefreshTime = -Mathf.Infinity;

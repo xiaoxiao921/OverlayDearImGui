@@ -1,0 +1,32 @@
+
+[config]
+schemaVersion = "0.0.1"
+
+[package]
+namespace = "xiaoxiao921"
+name = "OverlayDearImGui"
+versionNumber = "2.0.1"
+description = "Overlay Window for Dear ImGui"
+websiteUrl = "https://github.com/xiaoxiao921/OverlayDearImGui"
+containsNsfwContent = false
+
+[package.dependencies]
+bbepis-BepInExPack = "5.4.2109"
+
+[build]
+icon = "./icon.png"
+readme = "./README.md"
+outdir = "./build"
+
+[[build.copy]]
+source = "./ReleaseOutput/OverlayDearImGui.dll"
+target = "./plugins/OverlayDearImGui/OverlayDearImGui.dll"
+
+[[build.copy]]
+source = "./ReleaseOutput/OverlayDearImGui.xml"
+target = "./plugins/OverlayDearImGui/OverlayDearImGui.xml"
+
+[publish]
+repository = "https://thunderstore.io"
+communities = ["riskofrain2"]
+categories = ["libraries"]

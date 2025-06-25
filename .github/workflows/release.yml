@@ -1,0 +1,88 @@
+name: Thunderstore Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest  
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Setup NuGet
+      uses: NuGet/setup-nuget@v1
+
+    - name: Setup TCLI
+      run: dotnet tool install --global tcli
+
+    - name: Setup dotnet
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    # Install Mono on Ubuntu to run nuget.exe (due to this issue on Ubuntu 24 that hasn't been fixed yet - https://github.com/NuGet/setup-nuget/issues/168)
+    - name: Install Mono on Ubuntu
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y apt-transport-https dirmngr gnupg ca-certificates
+        sudo apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
+        echo "deb https://download.mono-project.com/repo/ubuntu stable-focal main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list
+        sudo apt-get update
+        sudo apt-get install -y mono-complete
+
+    - name: Build and Publish
+      shell: bash
+      run: |
+        set -x
+
+        sudo add-apt-repository ppa:rmescandon/yq
+        sudo apt update
+        sudo apt install yq -y
+
+        namespace=$(yq e '.namespace' thunderstore.toml)
+        name=$(yq e '.name' thunderstore.toml)
+        version=$(yq e '.version' thunderstore.toml)
+        csproj_folder=$name
+        # Replace spaces with underscores in name for name_underscore_separator
+        name_underscore_separator="${name// /_}"
+        nuget_package_name="${namespace}.${name}"
+
+        echo "namespace=$namespace"
+        echo "name=$name"
+        echo "version=$version"
+        echo "csproj_folder=$csproj_folder"
+        echo "name_underscore_separator=$name_underscore_separator"
+        echo "nuget_package_name=$nuget_package_name"
+
+        is_project_built=false
+
+        # Check if NuGet package version exists
+        existing_version_number=$(curl --compressed -s "https://api-v2v3search-0.nuget.org/query?q=packageid:${nuget_package_name}&prerelease=true&semVerLevel=2.0.0" | jq '.data[0]?.versions[]?.version' | grep "${version}\"" || true)
+        if [ -z "$existing_version_number" ]; then
+          dotnet pack "${csproj_folder}/${csproj_folder}.csproj" --configuration Release /p:PackageOutputPath=./ReleaseOutput /p:OutputPath=./ReleaseOutput
+          is_project_built=true
+
+          nuget setapikey "${{ secrets.NUGET_API_KEY }}"
+          #nuget push ./ReleaseOutput/*.nupkg -Source 'https://api.nuget.org/v3/index.json'
+          ls -al
+          find . -name '*.nupkg' -type f -delete
+        fi
+
+        # Check if Thunderstore version exists
+        existing_version_number=$(curl --compressed -s "https://thunderstore.io/api/v1/package/" | jq --arg package_name "$namespace-$name_underscore_separator" '.[]? | select(.full_name|startswith($package_name)) | .versions[0]?.version_number' | grep "${version}\"" || true)
+        if [ -z "$existing_version_number" ]; then
+          if [ "$is_project_built" = false ]; then
+            dotnet pack "${csproj_folder}/${csproj_folder}.csproj" --configuration Release /p:PackageOutputPath=./ReleaseOutput /p:OutputPath=./ReleaseOutput
+            is_project_built=true
+          fi
+
+          find . -name '*.pdb' -type f -delete
+          find . -name '*.deps.json' -type f -delete
+
+          #tcli publish --token ${{ secrets.TCLI_AUTH_TOKEN }}
+          ls -al
+
+          rm -rf ./build
+        fi
