@@ -83,7 +83,7 @@ jobs:
             dotnet pack "$csproj" --configuration Release /p:PackageOutputPath="$dir/ReleaseOutput" /p:OutputPath="$dir/ReleaseOutput"
             is_project_built=true
             nuget setapikey "${{ secrets.NUGET_API_KEY }}"
-            # nuget push "$dir/ReleaseOutput/*.nupkg" -Source 'https://api.nuget.org/v3/index.json'
+            nuget push "$dir/ReleaseOutput/*.nupkg" -Source 'https://api.nuget.org/v3/index.json'
             find "$dir" -name '*.nupkg' -type f -delete
           fi
 
@@ -97,8 +97,8 @@ jobs:
             find "$dir" -name '*.pdb' -type f -delete
             find "$dir" -name '*.deps.json' -type f -delete
 
-            # tcli publish --token "${{ secrets.TCLI_AUTH_TOKEN }}"
-            echo "Would publish Thunderstore package from $dir"
+            tcli publish --token "${{ secrets.TCLI_AUTH_TOKEN }}"
+            # echo "Would publish Thunderstore package from $dir"
 
             rm -rf "$dir/build"
           fi
