@@ -45,9 +45,9 @@ jobs:
       run: |
         set -x
 
-        namespace=$(yq e '.namespace' thunderstore.toml)
-        name=$(yq e '.name' thunderstore.toml)
-        version=$(yq e '.version' thunderstore.toml)
+        namespace=$(yq e '.package.namespace' thunderstore.toml)
+        name=$(yq e '.package.name' thunderstore.toml)
+        version=$(yq e '.package.versionNumber' thunderstore.toml)
         csproj_folder=$name
         # Replace spaces with underscores in name for name_underscore_separator
         name_underscore_separator="${name// /_}"
