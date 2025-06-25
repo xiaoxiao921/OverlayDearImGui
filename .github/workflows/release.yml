@@ -31,15 +31,19 @@ jobs:
         echo "deb https://download.mono-project.com/repo/ubuntu stable-focal main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list
         sudo apt-get update
         sudo apt-get install -y mono-complete
+    
+    - name: Install yq
+      run: |
+        YQ_VERSION=v4.44.1
+        ARCH=amd64
+        wget https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_${ARCH} -O yq
+        chmod +x yq
+        sudo mv yq /usr/local/bin/yq
 
     - name: Build and Publish
       shell: bash
       run: |
         set -x
-
-        sudo add-apt-repository ppa:rmescandon/yq
-        sudo apt update
-        sudo apt install yq -y
 
         namespace=$(yq e '.namespace' thunderstore.toml)
         name=$(yq e '.name' thunderstore.toml)
