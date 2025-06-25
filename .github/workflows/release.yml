@@ -97,7 +97,7 @@ jobs:
             find "$dir" -name '*.pdb' -type f -delete
             find "$dir" -name '*.deps.json' -type f -delete
 
-            tcli publish --token "${{ secrets.TCLI_AUTH_TOKEN }}"
+            tcli publish --token "${{ secrets.TCLI_AUTH_TOKEN }}" --config-path "$dir/thunderstore.toml"
             # echo "Would publish Thunderstore package from $dir"
 
             rm -rf "$dir/build"
