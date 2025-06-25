@@ -44,8 +44,8 @@ jobs:
       run: |
         set -x
 
-        # Find all csproj files
-        mapfile -t csproj_paths < <(find . -name '*.csproj')
+        # Find all csproj files that also have a thunderstore.toml next to them.
+        mapfile -t csproj_paths < <(find . -name '*.csproj' -exec test -f "{}/../thunderstore.toml" \; -print)
 
         # Sort to ensure OverlayDearImGui.Shared comes first
         csproj_paths=($(printf '%s\n' "${csproj_paths[@]}" | sort -r | grep OverlayDearImGui.Shared.csproj; printf '%s\n' "${csproj_paths[@]}" | grep -v OverlayDearImGui.Shared.csproj))
@@ -56,7 +56,7 @@ jobs:
           namespace=$(yq e '.package.namespace' "$dir/thunderstore.toml")
           name_underscore_separator=$(yq e '.package.name' "$dir/thunderstore.toml")
           version=$(yq e '.package.versionNumber' "$dir/thunderstore.toml")
-          name_dot_separator="${name_underscore_separator// /.}"
+          name_dot_separator="${name_underscore_separator//_/.}"
           nuget_package_name="${name_dot_separator}"
 
           echo "Processing $csproj in $dir"

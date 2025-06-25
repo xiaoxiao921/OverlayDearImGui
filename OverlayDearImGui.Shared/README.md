@@ -1,3 +1,3 @@
 # OverlayDearImGui.Shared
 
-Creates an Overlay Window that renders [Dear ImGui](https://github.com/ocornut/imgui) on top of the process of your choice.
+Creates an overlay window that renders [Dear ImGui](https://github.com/ocornut/imgui) over the process of your choice.
