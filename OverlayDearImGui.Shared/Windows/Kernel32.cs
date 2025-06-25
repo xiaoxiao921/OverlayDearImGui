@@ -4,6 +4,8 @@ using System.Security;
 
 namespace OverlayDearImGui.Windows;
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+
 public static class Kernel32
 {
     [DllImport("kernel32.dll", SetLastError = true)]
@@ -21,16 +23,14 @@ public static class Kernel32
 
     /// <summary>
     /// Sets the bits of a 64-bit value to indicate the comparison operator to use for a specified operating system version attribute. 
-    /// This function is used to build the dwlConditionMask parameter of the <see cref="RtlVerifyVersionInfo(NativeTypes.OSVERSIONINFOEX, uint, ulong)"/>  and 
-    /// <see cref="VerifyVersionInfo(NativeTypes.OSVERSIONINFOEX, uint, ulong)"/> functions.
+    /// This function is used to build the dwlConditionMask parameter of the RtlVerifyVersionInfo(NativeTypes.OSVERSIONINFOEX, uint, ulong)  and 
     /// </summary>
     /// <param name="dwlConditionMask">
-    /// A value to be passed as the dwlConditionMask parameter of the <see cref="RtlVerifyVersionInfo(NativeTypes.OSVERSIONINFOEX, uint, ulong)"/> and 
-    /// <see cref="VerifyVersionInfo(NativeTypes.OSVERSIONINFOEX, uint, ulong)"/> functions. The function stores the comparison information in the bits of this variable.
+    /// A value to be passed as the dwlConditionMask parameter of the RtlVerifyVersionInfo(NativeTypes.OSVERSIONINFOEX, uint, ulong) and 
     /// </param>
-    /// <param name="dwTypeBitMask">A mask that indicates the member of <see cref="NativeTypes.OSVERSIONINFOEX"/> whose comparision operator is being set.
-    /// This value corresponds to one of the bits specified in the dwTypeMask parameter of <see cref="RtlVerifyVersionInfo(NativeTypes.OSVERSIONINFOEX, uint, ulong)"/>. 
-    /// This parameter can have one of the values from <see cref="NativeConstants.TypeBitMasks"/></param>
+    /// <param name="dwTypeBitMask">A mask that indicates the member of NativeTypes.OSVERSIONINFOEX"/> whose comparision operator is being set.
+    /// This value corresponds to one of the bits specified in the dwTypeMask parameter of RtlVerifyVersionInfo(NativeTypes.OSVERSIONINFOEX, uint, ulong).
+    /// This parameter can have one of the values from NativeConstants.TypeBitMasks</param>
     /// <param name="dwConditionMask"></param>
     /// <returns>The function returns the condition mask value.</returns>
     /// <remarks> 
@@ -41,24 +41,6 @@ public static class Kernel32
     [DllImport("kernel32.dll", CallingConvention = CallingConvention.Winapi)]
     private static extern ulong VerSetConditionMask(ulong dwlConditionMask, uint dwTypeBitMask, byte dwConditionMask);
 
-
-    /// <summary>
-    /// Sets the bits of a 64-bit value to indicate the comparison operator to use for a specified operating system version attribute. 
-    /// This function is used to build the dwlConditionMask parameter of the <see cref="RtlVerifyVersionInfo(NativeTypes.OSVERSIONINFOEX, uint, ulong)"/>  and 
-    /// <see cref="VerifyVersionInfo(NativeTypes.OSVERSIONINFOEX, uint, ulong)"/> functions.
-    /// </summary>
-    /// <param name="dwlConditionMask">
-    /// A value to be passed as the dwlConditionMask parameter of the <see cref="RtlVerifyVersionInfo(NativeTypes.OSVERSIONINFOEX, uint, ulong)"/> and 
-    /// <see cref="VerifyVersionInfo(NativeTypes.OSVERSIONINFOEX, uint, ulong)"/> functions. The function stores the comparison information in the bits of this variable.
-    /// </param>
-    /// <param name="dwTypeBitMask">A mask that indicates the member of <see cref="NativeTypes.OSVERSIONINFOEX"/> whose comparision operator is being set.
-    /// This value corresponds to one of the bits specified in the dwTypeMask parameter of <see cref="RtlVerifyVersionInfo(NativeTypes.OSVERSIONINFOEX, uint, ulong)"/>. 
-    /// This parameter can have one of the values from <see cref="NativeConstants.TypeBitMasks"/></param>
-    /// <param name="dwConditionMask"></param>
-    /// <remarks> 
-    /// Before the first call to this function, initialize <paramref name="dwlConditionMask"/> variable to zero. 
-    /// For subsequent calls, pass in the variable used in the previous call.
-    /// </remarks>
     [SecuritySafeCritical]
     internal static void VER_SET_CONDITION(ref ulong dwlConditionMask, uint dwTypeBitMask, byte dwConditionMask)
     {
@@ -106,3 +88,5 @@ public static class Kernel32
     [DllImport("kernel32.dll", SetLastError = true)]
     public static extern bool QueryPerformanceFrequency(out long frequency);
 }
+
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member

@@ -45,20 +45,15 @@ jobs:
       run: |
         set -x
 
-        namespace=$(yq e '.package.namespace' thunderstore.toml)
-        name=$(yq e '.package.name' thunderstore.toml)
-        version=$(yq e '.package.versionNumber' thunderstore.toml)
-        csproj_folder=$name
-        # Replace spaces with underscores in name for name_underscore_separator
-        name_underscore_separator="${name// /_}"
-        nuget_package_name="${namespace}.${name}"
+        cd OverlayDearImGui.BepInEx5
 
-        echo "namespace=$namespace"
-        echo "name=$name"
-        echo "version=$version"
-        echo "csproj_folder=$csproj_folder"
-        echo "name_underscore_separator=$name_underscore_separator"
-        echo "nuget_package_name=$nuget_package_name"
+        namespace=$(yq e '.package.namespace' thunderstore.toml)
+        name_underscore_separator=$(yq e '.package.name' thunderstore.toml)
+        version=$(yq e '.package.versionNumber' thunderstore.toml)
+        # Replace spaces with dots in name for name_dot_separator
+        name_dot_separator="${name_underscore_separator// /.}"
+        csproj_folder="${name_underscore_separator}"
+        nuget_package_name="${name_dot_separator}"
 
         is_project_built=false
 

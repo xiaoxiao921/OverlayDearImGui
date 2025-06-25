@@ -3,6 +3,8 @@ using System.Runtime.InteropServices;
 
 namespace OverlayDearImGui.Windows;
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+
 public static class WindowFactory
 {
     const uint WS_POPUP = 0x80000000;
@@ -54,3 +56,5 @@ public static class WindowFactory
         return (hwnd, wc);
     }
 }
+
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member

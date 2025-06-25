@@ -2,6 +2,8 @@
 
 namespace OverlayDearImGui.Windows;
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+
 [StructLayout(LayoutKind.Sequential)]
 public struct RECT
 {
@@ -97,3 +99,5 @@ public struct RECT
         return string.Format(System.Globalization.CultureInfo.CurrentCulture, "{{Left={0},Top={1},Right={2},Bottom={3}}}", Left, Top, Right, Bottom);
     }
 }
+
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member

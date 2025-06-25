@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using ImGuiNET;
 using OverlayDearImGui.Windows;
 using SharpDX.Direct3D;
@@ -9,6 +10,8 @@ using SharpDX.DXGI;
 using SharpDX.Mathematics.Interop;
 
 using SharedList = OverlayDearImGui.DisposableList<OverlayDearImGui.ClonedDrawData>;
+
+[assembly: InternalsVisibleTo("OverlayDearImGui.BepInEx5")]
 
 namespace OverlayDearImGui;
 

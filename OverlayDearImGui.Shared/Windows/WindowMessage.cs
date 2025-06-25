@@ -2,6 +2,8 @@
 
 namespace OverlayDearImGui.Windows;
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+
 public enum WindowMessage : uint
 {
     /// <summary>
@@ -1391,3 +1393,5 @@ public enum WindowMessage : uint
     ///// <summary>A top-level window is being replaced. The window exists when the system calls this hook.</summary>
     //WM_HSHELL_WINDOWREPLACED = 13
 }
+
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member

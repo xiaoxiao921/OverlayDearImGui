@@ -57,6 +57,8 @@ artifacts/
 # StyleCop
 StyleCopReport.xml
 
+*/ReleaseOutput/*
+
 # Files built by Visual Studio
 *_i.c
 *_p.c

@@ -3,6 +3,8 @@ using System.Runtime.InteropServices;
 
 namespace OverlayDearImGui.Windows;
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+
 [Flags]
 public enum PRODUCT_SUITE : short
 {
@@ -238,3 +240,5 @@ public static class Ntdll
     VER_MASK TypeMask,
     long ConditionMask);
 }
+
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member

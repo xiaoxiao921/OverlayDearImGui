@@ -1,5 +1,7 @@
 ﻿namespace OverlayDearImGui.Windows;
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+
 public enum NtStatus : uint
 {
     // Success
@@ -341,3 +343,5 @@ public enum NtStatus : uint
 
     MaximumNtStatus = 0xffffffff
 }
+
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member

@@ -3,6 +3,8 @@ using System.Runtime.InteropServices;
 
 namespace OverlayDearImGui.Windows;
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+
 [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
 public struct WNDCLASSEXW
 {
@@ -21,3 +23,4 @@ public struct WNDCLASSEXW
     public string lpszClassName;
     public IntPtr hIconSm;
 }
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member

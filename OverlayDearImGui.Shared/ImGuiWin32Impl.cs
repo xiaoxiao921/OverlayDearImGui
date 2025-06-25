@@ -6,6 +6,8 @@ using OverlayDearImGui.Windows;
 
 namespace OverlayDearImGui;
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+
 public static unsafe class ImGuiWin32Impl
 {
     private delegate uint XInputGetCapabilitiesDelegate(uint a, uint b, IntPtr c);
@@ -731,3 +733,5 @@ public static unsafe class ImGuiWin32Impl
 
     internal static void Init(IntPtr windowHandle) => ImGui_ImplWin32_Init((void*)windowHandle);
 }
+
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member

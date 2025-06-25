@@ -19,6 +19,8 @@ using ShaderResourceViewDimension = SharpDX.Direct3D.ShaderResourceViewDimension
 
 namespace OverlayDearImGui;
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+
 public static class ImGuiDX11Impl
 {
     private static IntPtr _renderNamePtr;
@@ -653,3 +655,5 @@ public static class ImGuiDX11Impl
         _deviceContext = new((IntPtr)deviceContext);
     }
 }
+
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member

@@ -1,5 +1,7 @@
 ﻿namespace OverlayDearImGui.Windows;
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+
 public static partial class User32
 {
     public enum VirtualKey : int
@@ -191,3 +193,6 @@ public static partial class User32
         VK_OEM_CLEAR = 0xFE
     }
 }
+
+
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member

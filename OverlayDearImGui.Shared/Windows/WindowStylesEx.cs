@@ -2,6 +2,8 @@
 
 namespace OverlayDearImGui.Windows;
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+
 public static partial class User32
 {
     [Flags]
@@ -147,3 +149,5 @@ public static partial class User32
         WS_EX_WINDOWEDGE = 0x00000100
     }
 }
+
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member

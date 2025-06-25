@@ -1,0 +1,46 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>netstandard2.1</TargetFrameworks>
+		<LangVersion>preview</LangVersion>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+
+		<RestoreAdditionalProjectSources>
+			https://api.nuget.org/v3/index.json;
+			https://nuget.bepinex.dev/v3/index.json
+		</RestoreAdditionalProjectSources>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\AutoThunderstoreVersion\AutoThunderstoreVersion.csproj"
+						  PrivateAssets="all"
+						  ReferenceOutputAssembly="false"
+						  OutputItemType="Analyzer"
+						  SetTargetFramework="TargetFramework=netstandard2.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="UnityEngine.Modules" Version="2021.3.33" IncludeAssets="compile" />
+
+		<PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All"/>
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+		<PackageReference Include="netstandard2.0.SharpDX" Version="4.2.1-beta0-g7abb72df54" />
+		<PackageReference Include="netstandard2.0.SharpDX.Direct3D11" Version="4.2.1-beta0-g7abb72df54" />
+		<PackageReference Include="netstandard2.0.SharpDX.DXGI" Version="4.2.1-beta0-g7abb72df54" />
+
+		<Reference Include="ImGui.NET">
+			<HintPath>../libs/netstandard2.1/ImGui.NET.dll</HintPath>
+		</Reference>
+		<Reference Include="System.Runtime.CompilerServices.Unsafe">
+			<HintPath>../libs/netstandard2.1/System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="../libs/**" Pack="True" PackagePath="lib\" />
+	</ItemGroup>
+</Project>

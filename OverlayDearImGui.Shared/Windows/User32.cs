@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace OverlayDearImGui.Windows;
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 public static partial class User32
 {
     [Flags]
@@ -174,7 +175,6 @@ public static partial class User32
     /// <summary>
     /// The RECT structure defines the coordinates of the upper-left and lower-right corners of a rectangle.
     /// </summary>
-    /// <see cref="http://msdn.microsoft.com/en-us/library/dd162897%28VS.85%29.aspx"/>
     /// <remarks>
     /// By convention, the right and bottom edges of the rectangle are normally considered exclusive.
     /// In other words, the pixel whose coordinates are ( right, bottom ) lies immediately outside of the the rectangle.
@@ -260,7 +260,6 @@ public static partial class User32
     /// <summary>
     /// The services requested. This member can be a combination of the following values.
     /// </summary>
-    /// <seealso cref="http://msdn.microsoft.com/en-us/library/ms645604%28v=vs.85%29.aspx"/>
     [Flags]
     public enum TMEFlags : uint
     {
@@ -455,3 +454,4 @@ public static partial class User32
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool SetCursorPos(int x, int y);
 }
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member

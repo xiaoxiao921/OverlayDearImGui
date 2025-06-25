@@ -3,6 +3,8 @@ using System.Runtime.InteropServices;
 
 namespace OverlayDearImGui.Windows;
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+
 public enum PROCESS_DPI_AWARENESS
 {
     PROCESS_DPI_UNAWARE = 0, PROCESS_SYSTEM_DPI_AWARE = 1, PROCESS_PER_MONITOR_DPI_AWARE = 2
@@ -18,3 +20,4 @@ public static class Shellscalingapi
     [DllImport("shcore.dll")]
     internal static extern uint GetDpiForMonitor(IntPtr hmonitor, MONITOR_DPI_TYPE dpiType, out uint dpiX, out uint dpiY);
 }
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member

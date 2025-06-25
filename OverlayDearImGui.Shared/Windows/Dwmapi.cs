@@ -3,6 +3,8 @@ using System.Runtime.InteropServices;
 
 namespace OverlayDearImGui.Windows;
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+
 public static class Dwmapi
 {
     [DllImport("dwmapi.dll")]
@@ -52,3 +54,5 @@ public static class Dwmapi
         TransitionMaximized = 4
     }
 }
+
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member

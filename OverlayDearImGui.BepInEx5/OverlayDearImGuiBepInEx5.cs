@@ -6,9 +6,11 @@ using UnityEngine;
 
 namespace OverlayDearImGui;
 
+#pragma warning disable CS0436 // Type conflicts with imported type
 [AutoThunderstoreVersion.AutoVersion]
+#pragma warning restore CS0436 // Type conflicts with imported type
 [BepInPlugin(PluginGUID, PluginName, PluginVersion)]
-public partial class OverlayDearImGui : BaseUnityPlugin
+public partial class OverlayDearImGuiBepInEx5 : BaseUnityPlugin
 {
     public const string PluginGUID = PluginAuthor + "." + PluginName;
     public const string PluginAuthor = "iDeathHD";
@@ -20,7 +22,7 @@ public partial class OverlayDearImGui : BaseUnityPlugin
 
     private void Awake()
     {
-        Log.Init(Logger);
+        Log.Init(new LogBepInEx5(Logger));
 
         _renderThread = new Thread(() =>
         {
