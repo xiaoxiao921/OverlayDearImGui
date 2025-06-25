@@ -32,56 +32,64 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y mono-complete
     
-    - name: Install yq
-      run: |
-        YQ_VERSION=v4.44.1
-        ARCH=amd64
-        wget https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_${ARCH} -O yq
-        chmod +x yq
-        sudo mv yq /usr/local/bin/yq
+      - name: Install yq
+        run: |
+          YQ_VERSION=v4.44.1
+          ARCH=amd64
+          wget https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_${ARCH} -O yq
+          chmod +x yq
+          sudo mv yq /usr/local/bin/yq
 
-    - name: Build and Publish
-      shell: bash
-      run: |
-        set -x
+      - name: Build and Publish
+        run: |
+          set -x
 
-        cd OverlayDearImGui.BepInEx5
+          # Find all csproj files
+          mapfile -t csproj_paths < <(find . -name '*.csproj')
 
-        namespace=$(yq e '.package.namespace' thunderstore.toml)
-        name_underscore_separator=$(yq e '.package.name' thunderstore.toml)
-        version=$(yq e '.package.versionNumber' thunderstore.toml)
-        # Replace spaces with dots in name for name_dot_separator
-        name_dot_separator="${name_underscore_separator// /.}"
-        csproj_folder="${name_underscore_separator}"
-        nuget_package_name="${name_dot_separator}"
+          for csproj in "${csproj_paths[@]}"; do
+            dir=$(dirname "$csproj")
+            base=$(basename "$csproj" .csproj)
+            namespace=$(yq e '.package.namespace' "$dir/thunderstore.toml")
+            name_underscore_separator=$(yq e '.package.name' "$dir/thunderstore.toml")
+            version=$(yq e '.package.versionNumber' OverlayDearImGui.BepInEx5/thunderstore.toml)
+            name_dot_separator="${name_underscore_separator// /.}"
+            nuget_package_name="${name_dot_separator}"
 
-        is_project_built=false
+            echo "Processing $csproj in $dir"
 
-        # Check if NuGet package version exists
-        existing_version_number=$(curl --compressed -s "https://api-v2v3search-0.nuget.org/query?q=packageid:${nuget_package_name}&prerelease=true&semVerLevel=2.0.0" | jq '.data[0]?.versions[]?.version' | grep "${version}\"" || true)
-        if [ -z "$existing_version_number" ]; then
-          dotnet pack "${csproj_folder}/${csproj_folder}.csproj" --configuration Release /p:PackageOutputPath=./ReleaseOutput /p:OutputPath=./ReleaseOutput
-          is_project_built=true
+            # Inject <Version>$version</Version> if not present, or update it
+            if grep -q "<Version>.*</Version>" "$csproj"; then
+              sed -i "s|<Version>.*</Version>|<Version>$version</Version>|" "$csproj"
+            else
+              sed -i "/<PropertyGroup>/a \  <Version>$version</Version>" "$csproj"
+            fi
 
-          nuget setapikey "${{ secrets.NUGET_API_KEY }}"
-          #nuget push ./ReleaseOutput/*.nupkg -Source 'https://api.nuget.org/v3/index.json'
-          ls -al
-          find . -name '*.nupkg' -type f -delete
-        fi
+            is_project_built=false
 
-        # Check if Thunderstore version exists
-        existing_version_number=$(curl --compressed -s "https://thunderstore.io/api/v1/package/" | jq --arg package_name "$namespace-$name_underscore_separator" '.[]? | select(.full_name|startswith($package_name)) | .versions[0]?.version_number' | grep "${version}\"" || true)
-        if [ -z "$existing_version_number" ]; then
-          if [ "$is_project_built" = false ]; then
-            dotnet pack "${csproj_folder}/${csproj_folder}.csproj" --configuration Release /p:PackageOutputPath=./ReleaseOutput /p:OutputPath=./ReleaseOutput
-            is_project_built=true
-          fi
+            # Check NuGet
+            existing_nuget=$(curl --compressed -s "https://api-v2v3search-0.nuget.org/query?q=packageid:${nuget_package_name}&prerelease=true&semVerLevel=2.0.0" | jq '.data[0]?.versions[]?.version' | grep "${version}\"" || true)
+            if [ -z "$existing_nuget" ]; then
+              dotnet pack "$csproj" --configuration Release /p:PackageOutputPath="$dir/ReleaseOutput" /p:OutputPath="$dir/ReleaseOutput"
+              is_project_built=true
+              nuget setapikey "${{ secrets.NUGET_API_KEY }}"
+              # nuget push "$dir/ReleaseOutput/*.nupkg" -Source 'https://api.nuget.org/v3/index.json'
+              find "$dir" -name '*.nupkg' -type f -delete
+            fi
 
-          find . -name '*.pdb' -type f -delete
-          find . -name '*.deps.json' -type f -delete
+            # Check Thunderstore
+            existing_ts=$(curl --compressed -s "https://thunderstore.io/api/v1/package/" | jq --arg package_name "$namespace-$name_underscore_separator" '.[]? | select(.full_name|startswith($package_name)) | .versions[0]?.version_number' | grep "${version}\"" || true)
+            if [ -z "$existing_ts" ]; then
+              if [ "$is_project_built" = false ]; then
+                dotnet pack "$csproj" --configuration Release /p:PackageOutputPath="$dir/ReleaseOutput" /p:OutputPath="$dir/ReleaseOutput"
+              fi
 
-          #tcli publish --token ${{ secrets.TCLI_AUTH_TOKEN }}
-          ls -al
+              find "$dir" -name '*.pdb' -type f -delete
+              find "$dir" -name '*.deps.json' -type f -delete
 
-          rm -rf ./build
-        fi
+              # tcli publish --token "${{ secrets.TCLI_AUTH_TOKEN }}"
+              echo "Would publish Thunderstore package from $dir"
+
+              rm -rf "$dir/build"
+            fi
+          done
