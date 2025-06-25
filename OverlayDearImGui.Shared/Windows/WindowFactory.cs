@@ -21,16 +21,14 @@ public static class WindowFactory
             style = 0x0001, // CS_CLASSDC
             lpfnWndProc = Marshal.GetFunctionPointerForDelegate(Overlay.WndProc),
             hInstance = Kernel32.GetModuleHandle(null),
-            lpszClassName = name
+            lpszClassName = Marshal.StringToHGlobalUni(name)
         };
 
         var atom = User32.RegisterClassExW(ref wc);
         if (atom == 0)
         {
             var error = Marshal.GetLastWin32Error();
-#if DEBUG
             Log.Error($"RegisterClassExW failed: 0x{error:X8}");
-#endif
             return (IntPtr.Zero, default);
         }
 
@@ -47,9 +45,7 @@ public static class WindowFactory
         if (hwnd == IntPtr.Zero)
         {
             var error = Marshal.GetLastWin32Error();
-#if DEBUG
             Log.Error($"CreateWindowExW failed: 0x{error:X8}");
-#endif
             return (IntPtr.Zero, default);
         }
 

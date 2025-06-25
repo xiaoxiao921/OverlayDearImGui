@@ -1,9 +1,11 @@
 using System;
 using System.IO;
+using System.Numerics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using ImGuiNET;
+using Hexa.NET.ImGui;
+using HexaGen.Runtime;
 using OverlayDearImGui.Windows;
 using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
@@ -25,6 +27,7 @@ public class Overlay
 
     public static event Action OnRender;
 
+    /// <summary>
     /// Key for switching the overlay visibility.
     /// </summary>
     public static IConfigEntry<VirtualKey> OverlayToggle { get; internal set; }
@@ -180,7 +183,7 @@ public class Overlay
             if (vp.Flags.HasFlag(ImGuiViewportFlags.IsMinimized))
                 continue;
 
-            newData.Add(new(new(vp.DrawData)));
+            newData.Add(new(vp, new(vp.DrawData)));
         }
 
         lock (_drawDataLock)
@@ -192,7 +195,7 @@ public class Overlay
 
     internal static void UpdateOverlayDrawData()
     {
-        if (ImGui.GetCurrentContext() == null)
+        if (ImGui.GetCurrentContext().IsNull)
         {
             return;
         }
@@ -220,17 +223,147 @@ public class Overlay
         }
 
         ImGui.Render();
+        //ImGui.UpdatePlatformWindows();
         CloneRenderData();
     }
 
-    public unsafe void Render(string windowName, string windowClass, string assetsFolderPath, string imguiIniConfigFolderPath, IConfigEntry<VirtualKey> overlayToggleKeybind)
+    //private static unsafe void InitPlatformInterface()
+    //{
+    //ImGuiPlatformIOPtr platform_io = ImGui.GetPlatformIO();
+    //platform_io.RendererCreateWindow = (void*)Marshal.GetFunctionPointerForDelegate<RendererCreateWindow>(CreateWindow);
+    //platform_io.RendererDestroyWindow = (void*)Marshal.GetFunctionPointerForDelegate<RendererDestroyWindow>(DestroyWindow);
+    //platform_io.RendererSetWindowSize = (void*)Marshal.GetFunctionPointerForDelegate<RendererSetWindowSize>(SetWindowSize);
+    //}
+
+    //internal static unsafe void SetWindowSize(nint viewport_, Vector2 size)
+    //{
+    //ImGuiViewportPtr viewport = (ImGuiViewport*)viewport_;
+    //var data = (ImGuiViewportDataDx11*)viewport.RendererUserData;
+
+    // Delete our existing view
+    //new RenderTargetView(data->View).Dispose();
+    //var tmpSwap = new SwapChain(data->SwapChain);
+
+    // Resize buffers and recreate view
+    //tmpSwap.ResizeBuffers(1, (int)size.X, (int)size.Y, Format.Unknown, SwapChainFlags.None);
+    //using (var backbuffer = tmpSwap.GetBackBuffer<Texture2D>(0))
+    //data->View = new RenderTargetView(_device, backbuffer).NativePointer;
+    //}
+
+    //internal static unsafe void DestroyWindow(nint viewport_)
+    //{
+    //ImGuiViewportPtr viewport = (ImGuiViewport*)viewport_;
+    // This is also called on the main viewport for some reason, and we never set that viewport's RendererUserData
+    //if (viewport.RendererUserData == null) return;
+
+    //var data = (ImGuiViewportDataDx11*)viewport.RendererUserData;
+
+    //new SwapChain(data->SwapChain).Dispose();
+    //new RenderTargetView(data->View).Dispose();
+    //data->SwapChain = IntPtr.Zero;
+    //data->View = IntPtr.Zero;
+
+    //Marshal.FreeHGlobal((IntPtr)viewport.RendererUserData);
+    //viewport.RendererUserData = null;
+    //}
+
+    /// <summary>
+    /// Renderer data
+    /// </summary>
+    //private struct RendererData
+    //{
+    //    public IntPtr device;
+    //    public IntPtr context;
+    //    public IntPtr factory;
+    //    public IntPtr vertexBuffer;
+    //    public IntPtr indexBuffer;
+    //    public IntPtr vertexShader;
+    //    public IntPtr inputLayout;
+    //    public IntPtr constantBuffer;
+    //    public IntPtr pixelShader;
+    //    public IntPtr fontSampler;
+    //    public IntPtr fontTextureView;
+    //    public IntPtr rasterizerState;
+    //    public IntPtr blendState;
+    //    public IntPtr depthStencilState;
+    //    public int vertexBufferSize = 5000, indexBufferSize = 10000;
+
+    //    public RendererData()
+    //    {
+    //    }
+    //}
+
+    /** Viewport support **/
+    //private struct ImGuiViewportDataDx11
+    //{
+    //    public IntPtr SwapChain;
+    //    public IntPtr View;
+    //}
+
+    //private static IntPtr CreateSwapChain(SwapChainDescription desc)
+    //{
+    //    // Create a swapchain using the existing game hardware (I think)
+    //    using (var dxgi = _device.QueryInterface<SharpDX.DXGI.Device>())
+    //    using (var adapter = dxgi.Adapter)
+    //    using (var factory = adapter.GetParent<Factory>())
+    //    {
+    //        return new SwapChain(factory, _device, desc).NativePointer;
+    //    }
+    //}
+
+    // Viewport functions
+    //internal static unsafe void CreateWindow(nint viewport_)
+    //{
+    //    ImGuiViewportPtr viewport = (ImGuiViewport*)viewport_;
+    //    var data = (ImGuiViewportDataDx11*)Marshal.AllocHGlobal(Marshal.SizeOf<ImGuiViewportDataDx11>());
+
+    //    // PlatformHandleRaw should always be a HWND, whereas PlatformHandle might be a higher-level handle (e.g. GLFWWindow*, SDL_Window*).
+    //    // Some backend will leave PlatformHandleRaw NULL, in which case we assume PlatformHandle will contain the HWND.
+    //    IntPtr hWnd = (IntPtr)viewport.PlatformHandleRaw;
+    //    if (hWnd == IntPtr.Zero)
+    //        hWnd = (IntPtr)viewport.PlatformHandle;
+
+    //    // Create swapchain
+    //    SwapChainDescription desc = new SwapChainDescription
+    //    {
+    //        ModeDescription = new ModeDescription
+    //        {
+    //            Width = 0,
+    //            Height = 0,
+    //            Format = Format.R8G8B8A8_UNorm,
+    //            RefreshRate = new Rational(0, 0)
+    //        },
+    //        SampleDescription = new SampleDescription
+    //        {
+    //            Count = 1,
+    //            Quality = 0
+    //        },
+    //        Usage = Usage.RenderTargetOutput,
+    //        BufferCount = 1,
+    //        OutputHandle = hWnd,
+    //        IsWindowed = true,
+    //        SwapEffect = SwapEffect.Discard,
+    //        Flags = SwapChainFlags.None
+    //    };
+
+    //    data->SwapChain = CreateSwapChain(desc);
+
+    //    // Create the render target view
+    //    using (var backbuffer = new SwapChain(data->SwapChain).GetBackBuffer<Texture2D>(0))
+    //        data->View = new RenderTargetView(_device, backbuffer).NativePointer;
+
+    //    viewport.RendererUserData = (void*)(IntPtr)data;
+    //}
+
+    public unsafe void Render(string windowName, string windowClass, string assetsFolderPath, string imguiIniConfigFolderPath, IConfigEntry<VirtualKey> overlayToggleKeybind, string cimguiDllFilePath)
     {
+        ImGui.InitApi(new NativeLibraryContext(Kernel32.LoadLibrary(cimguiDllFilePath)));
+
         ImGuiIniConfigPath = Path.Combine(imguiIniConfigFolderPath, IniFileName);
         AssetsFolderPath = assetsFolderPath ?? Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Assets");
         OverlayToggle = overlayToggleKeybind;
 
         GameHwnd = User32.FindWindowW(windowClass, windowName);
-
 
         User32.GetWindowRect(GameHwnd, out _gameRect);
 
@@ -252,15 +385,21 @@ public class Overlay
 
         ImGui.CreateContext();
         var io = ImGui.GetIO();
-        io.ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard | ImGuiConfigFlags.NavEnableGamepad;
+        io.ConfigFlags |=
+            ImGuiConfigFlags.NavEnableKeyboard | ImGuiConfigFlags.NavEnableGamepad |
+            //ImGuiConfigFlags.DockingEnable | ImGuiConfigFlags.ViewportsEnable;
+            ImGuiConfigFlags.DockingEnable;
 
-        io.NativePtr->IniFilename = (byte*)Marshal.StringToHGlobalAnsi(ImGuiIniConfigPath);
+        //if (io.ConfigFlags.HasFlag(ImGuiConfigFlags.ViewportsEnable))
+        //InitPlatformInterface();
+
+        io.IniFilename = (byte*)Marshal.StringToHGlobalAnsi(ImGuiIniConfigPath);
 
         ImGui.StyleColorsDark();
 
         var fontPath = Path.Combine(AssetsFolderPath, "Fonts", "Bombardier-Regular.ttf");
         var font = io.Fonts.AddFontFromFileTTF(fontPath, 16);
-        io.NativePtr->FontDefault = font;
+        io.FontDefault = font;
 
         ImGuiWin32Impl.Init(hwnd);
 
@@ -356,6 +495,41 @@ public class Overlay
             }
 
             _swapChain.Present(1, PresentFlags.None);
+
+
+            //ref var viewports = ref ImGui.GetPlatformIO().Viewports;
+            //for (int i = 0; i < viewports.Size; i++)
+            //{
+            //    var viewport = viewports[i];
+
+            //    if ((viewport.Flags & ImGuiViewportFlags.IsMinimized) != 0)
+            //        continue;
+
+            //    var data = (ImGuiViewportDataDx11*)viewport.RendererUserData;
+            //    if (data == null)
+            //        continue;
+            //    if (data->View == null)
+            //        continue;
+
+            //    var tmpRtv = new RenderTargetView(data->View);
+            //    _deviceContext.OutputMerger.SetTargets(tmpRtv);
+            //    if ((viewport.Flags & ImGuiViewportFlags.NoRendererClear) != ImGuiViewportFlags.NoRendererClear)
+            //        _deviceContext.ClearRenderTargetView(tmpRtv, new(clearColor.X, clearColor.Y, clearColor.Z, clearColor.W));
+
+            //    if (newRenderData != null && newRenderData.Count > 0)
+            //    {
+            //        foreach (var renderData in newRenderData)
+            //        {
+            //            if (renderData.ViewportPtr == viewport)
+            //            {
+            //                ImGuiDX11Impl.RenderDrawData(renderData.Data);
+            //                break;
+            //            }
+            //        }
+            //    }
+
+            //    new SwapChain(data->SwapChain).Present(1, PresentFlags.None);
+            //}
         }
 
         ImGuiDX11Impl.Shutdown();

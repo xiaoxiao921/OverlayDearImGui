@@ -1,9 +1,10 @@
 using System;
 using System.Drawing;
 using System.IO;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 using SharpDX;
 using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
@@ -54,8 +55,7 @@ public static class ImGuiDX11Impl
         var deviceContext = new DeviceContext(ID3D11DeviceContextPtr);
 
         // Setup viewport
-        deviceContext.Rasterizer.SetViewport(0, 0, draw_data->DisplaySize.x, draw_data->DisplaySize.y);
-
+        deviceContext.Rasterizer.SetViewport(0, 0, draw_data->DisplaySize.X, draw_data->DisplaySize.Y);
 
         // Setup shader and vertex buffers
         deviceContext.InputAssembler.InputLayout = _inputLayout;
@@ -95,7 +95,7 @@ public static class ImGuiDX11Impl
         }
 
         // Avoid rendering when minimized
-        if (draw_data->DisplaySize.x <= 0.0f || draw_data->DisplaySize.y <= 0.0f)
+        if (draw_data->DisplaySize.X <= 0.0f || draw_data->DisplaySize.Y <= 0.0f)
             return;
 
         DeviceContext ctx = _deviceContext;
@@ -148,7 +148,7 @@ public static class ImGuiDX11Impl
         ushort* idx_dst = (ushort*)idx_resource.DataPointer;
         for (int n = 0; n < draw_data->CmdListsCount; n++)
         {
-            var cmd_list = (ImDrawList*)draw_data->CmdLists.Ref<IntPtr>(n);
+            var cmd_list = (ImDrawList*)draw_data->CmdLists[n];
 
             var len = cmd_list->VtxBuffer.Size * sizeof(ImDrawVert);
             System.Buffer.MemoryCopy((void*)cmd_list->VtxBuffer.Data, vtx_dst, len, len);
@@ -168,10 +168,10 @@ public static class ImGuiDX11Impl
         ctx.MapSubresource(_vertexConstantBuffer, MapMode.WriteDiscard, MapFlags.None, out var mapped_resource);
 
         VERTEX_CONSTANT_BUFFER_DX11* constant_buffer = (VERTEX_CONSTANT_BUFFER_DX11*)mapped_resource.DataPointer;
-        float L = draw_data->DisplayPos.x;
-        float R = draw_data->DisplayPos.x + draw_data->DisplaySize.x;
-        float T = draw_data->DisplayPos.y;
-        float B = draw_data->DisplayPos.y + draw_data->DisplaySize.y;
+        float L = draw_data->DisplayPos.X;
+        float R = draw_data->DisplayPos.X + draw_data->DisplaySize.X;
+        float T = draw_data->DisplayPos.Y;
+        float B = draw_data->DisplayPos.Y + draw_data->DisplaySize.Y;
 
         constant_buffer->mvp[0] = 2.0f / (R - L);
         constant_buffer->mvp[1] = 0.0f;
@@ -206,17 +206,17 @@ public static class ImGuiDX11Impl
         var clip_off = draw_data->DisplayPos;
         for (int n = 0; n < draw_data->CmdListsCount; n++)
         {
-            var cmd_list = (ImDrawList*)draw_data->CmdLists.Ref<IntPtr>(n);
+            var cmd_list = (ImDrawList*)draw_data->CmdLists[n];
             for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i++)
             {
-                var pcmd = cmd_list->CmdBuffer.Ref<ImDrawCmd>(cmd_i);
-                if (pcmd.UserCallback != IntPtr.Zero)
+                var pcmd = cmd_list->CmdBuffer[cmd_i];
+                if (pcmd.UserCallback != null)
                 {
-                    var userCallback = Marshal.GetDelegateForFunctionPointer<ImDrawUserCallBack>(pcmd.UserCallback);
+                    var userCallback = Marshal.GetDelegateForFunctionPointer<ImDrawUserCallBack>((IntPtr)pcmd.UserCallback);
 
                     // User callback, registered via ImDrawList::AddCallback()
                     // (ImDrawCallback_ResetRenderState is a special callback value used by the user to request the renderer to reset render state.)
-                    if (pcmd.UserCallback == new IntPtr(-1))
+                    if (pcmd.UserCallback == (void*)-1)
                         ImGui_ImplDX11_SetupRenderState(draw_data, ctx.NativePointer);
                     else
                         userCallback(cmd_list, &pcmd);
@@ -224,16 +224,16 @@ public static class ImGuiDX11Impl
                 else
                 {
                     // Project scissor/clipping rectangles into framebuffer space
-                    var clip_min = new Vector2(pcmd.ClipRect.x - clip_off.x, pcmd.ClipRect.y - clip_off.y);
-                    var clip_max = new Vector2(pcmd.ClipRect.z - clip_off.x, pcmd.ClipRect.w - clip_off.y);
-                    if (clip_max.x <= clip_min.x || clip_max.y <= clip_min.y)
+                    var clip_min = new Vector2(pcmd.ClipRect.X - clip_off.X, pcmd.ClipRect.Y - clip_off.Y);
+                    var clip_max = new Vector2(pcmd.ClipRect.Z - clip_off.X, pcmd.ClipRect.W - clip_off.Y);
+                    if (clip_max.X <= clip_min.X || clip_max.Y <= clip_min.Y)
                         continue;
 
                     // Apply scissor/clipping rectangle
-                    RawRectangle r = new((int)clip_min.x, (int)clip_min.y, (int)clip_max.x, (int)clip_max.y);
+                    RawRectangle r = new((int)clip_min.X, (int)clip_min.Y, (int)clip_max.X, (int)clip_max.Y);
                     ctx.Rasterizer.SetScissorRectangles(r);
 
-                    ctx.PixelShader.SetShaderResource(0, new(pcmd.TextureId));
+                    ctx.PixelShader.SetShaderResource(0, new((IntPtr)pcmd.TextureId.Handle));
                     ctx.DrawIndexed((int)pcmd.ElemCount, (int)(pcmd.IdxOffset + global_idx_offset), (int)(pcmd.VtxOffset + global_vtx_offset));
                 }
             }
@@ -437,7 +437,11 @@ public static class ImGuiDX11Impl
         var io = ImGui.GetIO();
 
         // Build texture atlas
-        io.Fonts.GetTexDataAsRGBA32(out IntPtr fontPixels, out int fontWidth, out int fontHeight, out int fontBytesPerPixel);
+        byte* fontPixels;
+        int fontWidth;
+        int fontHeight;
+        int fontBytesPerPixel;
+        io.Fonts.GetTexDataAsRGBA32(&fontPixels, &fontWidth, &fontHeight, &fontBytesPerPixel);
 
         // Upload texture to graphics system
         var texDesc = new Texture2DDescription
@@ -454,7 +458,7 @@ public static class ImGuiDX11Impl
             OptionFlags = ResourceOptionFlags.None
         };
 
-        using (var fontTexture = new SharpDX.Direct3D11.Texture2D(_device, texDesc, new DataRectangle(fontPixels, fontWidth * fontBytesPerPixel)))
+        using (var fontTexture = new SharpDX.Direct3D11.Texture2D(_device, texDesc, new DataRectangle((IntPtr)fontPixels, fontWidth * fontBytesPerPixel)))
         {
             // Create texture view
             _fontResourceView = new ShaderResourceView(_device, fontTexture, new ShaderResourceViewDescription
@@ -466,7 +470,7 @@ public static class ImGuiDX11Impl
         }
 
         // Store our identifier
-        io.Fonts.SetTexID(_fontResourceView.NativePointer);
+        io.Fonts.SetTexID(new(_fontResourceView.NativePointer));
 
         // Create texture sampler
         _fontSampler = new SamplerState(_device, new SamplerStateDescription
@@ -591,7 +595,7 @@ public static class ImGuiDX11Impl
 
         _fontResourceView?.Dispose();
         _fontResourceView = null;
-        ImGui.GetIO().Fonts.SetTexID(IntPtr.Zero);
+        ImGui.GetIO().Fonts.SetTexID(new(IntPtr.Zero));
 
         _indexBuffer?.Dispose();
         _indexBuffer = null;
@@ -646,10 +650,11 @@ public static class ImGuiDX11Impl
 
     internal static unsafe void Init(void* device, void* deviceContext)
     {
-        ImGui.GetIO().BackendFlags = ImGui.GetIO().BackendFlags | ImGuiBackendFlags.RendererHasVtxOffset;
+        ImGui.GetIO().BackendFlags = ImGui.GetIO().BackendFlags | ImGuiBackendFlags.RendererHasVtxOffset | ImGuiBackendFlags.RendererHasViewports;
 
         _renderNamePtr = Marshal.StringToHGlobalAnsi("imgui_impl_dx11_c#");
-        ImGui.GetIO().NativePtr->BackendRendererName = (byte*)_renderNamePtr.ToPointer();
+        var io = ImGui.GetIO();
+        io.BackendRendererName = (byte*)_renderNamePtr.ToPointer();
 
         _device = new((IntPtr)device);
         _deviceContext = new((IntPtr)deviceContext);

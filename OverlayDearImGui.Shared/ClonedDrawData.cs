@@ -1,15 +1,19 @@
 using System;
 using System.Runtime.InteropServices;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 
 namespace OverlayDearImGui;
 
 internal unsafe sealed class ClonedDrawData : IDisposable
 {
+    public ImGuiViewportPtr ViewportPtr { get; private set; }
+
     public ImDrawData* Data { get; private set; }
 
-    public unsafe ClonedDrawData(ImDrawDataPtr inp)
+    public unsafe ClonedDrawData(ImGuiViewportPtr viewportPtr, ImDrawDataPtr inp)
     {
+        ViewportPtr = viewportPtr;
+
         long ddsize = Marshal.SizeOf<ImDrawData>();
 
         // start with a shallow copy
@@ -19,13 +23,13 @@ internal unsafe sealed class ClonedDrawData : IDisposable
         // clone the draw data
         int numLists = inp.CmdLists.Size;
         var cmdListPtrs = ImGui.MemAlloc((uint)(Marshal.SizeOf<IntPtr>() * numLists));
-        Data->CmdLists = new ImVector(
+        Data->CmdLists = new ImVector<ImDrawListPtr>(
             numLists,
             numLists,
-            cmdListPtrs);
+            (ImDrawListPtr*)cmdListPtrs);
         for (int i = 0; i < inp.CmdLists.Size; ++i)
         {
-            Data->CmdLists.Ref<ImDrawListPtr>(i) = inp.CmdLists[i].CloneOutput();
+            Data->CmdLists[i] = inp.CmdLists[i].CloneOutput();
         }
     }
 
@@ -36,9 +40,9 @@ internal unsafe sealed class ClonedDrawData : IDisposable
 
         for (int i = 0; i < Data->CmdListsCount; ++i)
         {
-            Data->CmdLists.Ref<ImDrawListPtr>(i).Destroy();
+            Data->CmdLists[i].Destroy();
         }
-        ImGuiNative.ImDrawData_destroy(Data);
+        Data->Destroy();
         Data = null;
     }
 }

@@ -10,7 +10,7 @@ The keybind for bringing up the cursor for interaction is by default the `Insert
 
 ## Mod Developers
 
-Download this package and the `OverlayDearImGui.Shared` dependency. Add a reference to `ImGui.NET.dll` (from Shared) and `OverlayDearImGui.BepInEx5.dll` (from this package) in your C# project.
+Download this package and the `OverlayDearImGui.Shared` dependency. Add a reference to `Hexa.NET.ImGui.dll` (from Shared) and `OverlayDearImGui.BepInEx5.dll` (from this package) in your C# project.
 
 Above your `BaseUnityPlugin` class definition:
 

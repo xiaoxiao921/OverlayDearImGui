@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Threading;
 using BepInEx;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 using OverlayDearImGui.Windows;
 using UnityEngine;
 using static OverlayDearImGui.Windows.User32;
@@ -33,6 +33,8 @@ public partial class OverlayDearImGuiBepInEx5 : BaseUnityPlugin
             "Key for toggling the overlay.")
         );
 
+        Overlay.OnRender += MyUI;
+
         _renderThread = new Thread(() =>
         {
             try
@@ -40,7 +42,8 @@ public partial class OverlayDearImGuiBepInEx5 : BaseUnityPlugin
                 new Overlay().Render(null, "UnityWndClass",
                     Path.Combine(Path.GetDirectoryName(Info.Location), "Assets"),
                     Paths.ConfigPath,
-                    toggleKey
+                    toggleKey,
+                    Path.Combine(Path.GetDirectoryName(Info.Location), "cimgui.dll")
                 );
             }
             catch (Exception e)
@@ -65,7 +68,7 @@ public partial class OverlayDearImGuiBepInEx5 : BaseUnityPlugin
         {
             if (ImGui.BeginMenu("Debug", true))
             {
-                if (ImGui.MenuItem("Open Debug Window", null, _isMyUIOpen))
+                if (ImGui.MenuItem("Open Debug Window", (string)null, _isMyUIOpen))
                 {
                     _isMyUIOpen ^= true;
                 }
@@ -103,8 +106,7 @@ public partial class OverlayDearImGuiBepInEx5 : BaseUnityPlugin
                 ImGui.Text($"    Active: {active}");
                 ImGui.Text($"    Position: {pos}");
             }
-
-            ImGui.End();
         }
+        ImGui.End();
     }
 }

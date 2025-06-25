@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using static System.Net.WebRequestMethods;
 
 namespace OverlayDearImGui.Windows;
 
@@ -35,91 +36,8 @@ public static partial class User32
         KF_UP = 0x8000
     }
 
-    [DllImport("user32.dll", CallingConvention = CallingConvention.Winapi)]
-    public static extern IntPtr SetThreadDpiAwarenessContext(IntPtr dpiContext);
-
-    [DllImport("user32.dll", SetLastError = true)]
-    public static extern bool GetWindowRect(IntPtr hwnd, out RECT lpRect);
-
-    [DllImport("user32.dll")]
-    public static extern bool SetLayeredWindowAttributes(IntPtr hwnd, uint crKey, byte bAlpha, uint dwFlags);
-
-    /// <summary>
-    /// Unregisters a window class, freeing the memory required for the class.
-    /// </summary>
-    /// <param name="lpClassName">
-    /// Type: LPCTSTR
-    /// A null-terminated string or a class atom. If lpClassName is a string, it specifies the window class name.
-    /// This class name must have been registered by a previous call to the RegisterClass or RegisterClassEx function.
-    /// System classes, such as dialog box controls, cannot be unregistered. If this parameter is an atom,
-    ///   it must be a class atom created by a previous call to the RegisterClass or RegisterClassEx function.
-    /// The atom must be in the low-order word of lpClassName; the high-order word must be zero.
-    ///
-    /// </param>
-    /// <param name="hInstance">
-    /// A handle to the instance of the module that created the class.
-    ///
-    /// </param>
-    /// <returns>
-    /// Type: BOOL
-    /// If the function succeeds, the return value is nonzero.
-    /// If the class could not be found or if a window still exists that was created with the class, the return value is zero.
-    /// To get extended error information, call GetLastError.
-    ///
-    /// </returns>
-    [DllImport("user32.dll")]
-    public static extern bool UnregisterClass(string lpClassName, IntPtr hInstance);
-
-    [DllImport("user32.dll")]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool IsWindowVisible(IntPtr hWnd);
-
-    [DllImport("user32.dll")]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool SetForegroundWindow(IntPtr hWnd);
-
-    public enum ShowWindowCommand : int
-    {
-        Hide = 0,
-        ShowNormal = 1,
-        ShowMinimized = 2,
-        ShowMaximized = 3,
-        ShowNoActivate = 4,
-        Show = 5,
-        Minimize = 6,
-        ShowMinNoActive = 7,
-        ShowNA = 8,
-        Restore = 9,
-        ShowDefault = 10,
-        ForceMinimize = 11
-    }
-
-    [DllImport("user32.dll")]
-    public static extern bool ShowWindow(IntPtr hWnd, ShowWindowCommand nCmdShow);
-
-    [DllImport("user32.dll")]
-    public static extern bool BringWindowToTop(IntPtr hWnd);
-
-    [DllImport("user32.dll")]
-    public static extern bool UpdateWindow(IntPtr hWnd);
-
-    [DllImport("user32.dll")]
-    public static extern IntPtr DefWindowProc(IntPtr hWnd, WindowMessage uMsg, IntPtr wParam, IntPtr lParam);
-
-    [DllImport("user32.dll")]
-    public static extern void PostQuitMessage(int nExitCode);
-
-    [DllImport("user32.dll", CallingConvention = CallingConvention.Winapi)]
-    public static extern IntPtr GetThreadDpiAwarenessContext();
-
-    [DllImport("user32.dll")]
-    public static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint dwFlags);
-
-    [DllImport("User32.dll")]
-    public static extern bool GetMonitorInfo(IntPtr hMonitor, ref MonitorInfoEx lpmi);
-
-    // size of a device name string
-    private const int CCHDEVICENAME = 32;
+    public const int CS_HREDRAW = 0x0002;
+    public const int CS_VREDRAW = 0x0001;
 
     /// <summary>
     /// The MONITORINFOEX structure contains information about a display monitor.
@@ -167,7 +85,7 @@ public static partial class User32
 
         public void Init()
         {
-            this.Size = 40 + 2 * CCHDEVICENAME;
+            this.Size = Marshal.SizeOf(typeof(MonitorInfoEx));
             this.DeviceName = string.Empty;
         }
     }
@@ -175,6 +93,7 @@ public static partial class User32
     /// <summary>
     /// The RECT structure defines the coordinates of the upper-left and lower-right corners of a rectangle.
     /// </summary>
+    /// <see cref="http://msdn.microsoft.com/en-us/library/dd162897%28VS.85%29.aspx"/>
     /// <remarks>
     /// By convention, the right and bottom edges of the rectangle are normally considered exclusive.
     /// In other words, the pixel whose coordinates are ( right, bottom ) lies immediately outside of the the rectangle.
@@ -205,11 +124,110 @@ public static partial class User32
         public int Bottom;
     }
 
+    [DllImport("user32.dll", CallingConvention = CallingConvention.Winapi)]
+    public static extern IntPtr SetThreadDpiAwarenessContext(IntPtr dpiContext);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern bool GetWindowRect(IntPtr hwnd, out RECT lpRect);
+
+    [DllImport("user32.dll")]
+    public static extern bool SetLayeredWindowAttributes(IntPtr hwnd, uint crKey, byte bAlpha, uint dwFlags);
+
+    /// <summary>
+    /// Unregisters a window class, freeing the memory required for the class.
+    /// </summary>
+    /// <param name="lpClassName">
+    /// Type: LPCTSTR
+    /// A null-terminated string or a class atom. If lpClassName is a string, it specifies the window class name.
+    /// This class name must have been registered by a previous call to the RegisterClass or RegisterClassEx function.
+    /// System classes, such as dialog box controls, cannot be unregistered. If this parameter is an atom,
+    ///   it must be a class atom created by a previous call to the RegisterClass or RegisterClassEx function.
+    /// The atom must be in the low-order word of lpClassName; the high-order word must be zero.
+    ///
+    /// </param>
+    /// <param name="hInstance">
+    /// A handle to the instance of the module that created the class.
+    ///
+    /// </param>
+    /// <returns>
+    /// Type: BOOL
+    /// If the function succeeds, the return value is nonzero.
+    /// If the class could not be found or if a window still exists that was created with the class, the return value is zero.
+    /// To get extended error information, call GetLastError.
+    ///
+    /// </returns>
+    [DllImport("user32.dll")]
+    public static extern bool UnregisterClass(IntPtr lpClassName, IntPtr hInstance);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool IsWindowVisible(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool SetForegroundWindow(IntPtr hWnd);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern IntPtr SetFocus(IntPtr hWnd);
+
+    public enum ShowWindowCommand : int
+    {
+        Hide = 0,
+        ShowNormal = 1,
+        ShowMinimized = 2,
+        ShowMaximized = 3,
+        ShowNoActivate = 4,
+        Show = 5,
+        Minimize = 6,
+        ShowMinNoActive = 7,
+        ShowNA = 8,
+        Restore = 9,
+        ShowDefault = 10,
+        ForceMinimize = 11
+    }
+
+    [DllImport("user32.dll")]
+    public static extern bool ShowWindow(IntPtr hWnd, ShowWindowCommand nCmdShow);
+
+    [DllImport("user32.dll")]
+    public static extern bool BringWindowToTop(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    public static extern bool UpdateWindow(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    public static extern IntPtr DefWindowProc(IntPtr hWnd, WindowMessage uMsg, IntPtr wParam, IntPtr lParam);
+
+    [DllImport("user32.dll")]
+    public static extern void PostQuitMessage(int nExitCode);
+
+    [DllImport("user32.dll", CallingConvention = CallingConvention.Winapi)]
+    public static extern IntPtr GetThreadDpiAwarenessContext();
+
+    [DllImport("user32.dll")]
+    public static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint dwFlags);
+
+    [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+    public static extern bool GetMonitorInfo(IntPtr hMonitor, ref MonitorInfoEx lpmi);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.U2)]
+    public static extern short RegisterClassEx([In] ref WNDCLASSEXW lpwcx);
+
+    // size of a device name string
+    private const int CCHDEVICENAME = 32;
+
     [DllImport("user32.dll")]
     public static extern IntPtr GetDC(IntPtr hWnd);
 
     [DllImport("user32.dll")]
     public static extern int GetSystemMetrics(SystemMetric smIndex);
+
+    [DllImport("user32.dll")]
+    public static extern bool EnumDisplayMonitors(IntPtr hdc, IntPtr lprcClip,
+   EnumMonitorsDelegate lpfnEnum, IntPtr dwData);
+
+    public delegate bool EnumMonitorsDelegate(IntPtr hMonitor, IntPtr hdcMonitor, ref RectStruct lprcMonitor, IntPtr dwData);
 
     [DllImport("user32.dll")]
     public static extern bool ReleaseDC(IntPtr hWnd, IntPtr hDC);
@@ -234,8 +252,8 @@ public static partial class User32
     public static extern int MessageBox(IntPtr hWnd, String text, String caption, int options);
 
     [DllImport("user32.dll")]
-    public static extern bool AdjustWindowRectEx(ref RECT lpRect, uint dwStyle,
-    bool bMenu, uint dwExStyle);
+    public static extern bool AdjustWindowRectEx(ref RECT lpRect, WindowStyles dwStyle,
+    bool bMenu, WindowStylesEx dwExStyle);
 
     [DllImport("user32.dll")]
     public static extern short GetAsyncKeyState(VirtualKey vKey);
@@ -254,7 +272,7 @@ public static partial class User32
         [In, Optional] IntPtr lpParam
     )
     {
-        return CreateWindowExW(0, lpClassName, lpWindowName, dwStyle, X, Y, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
+        return CreateWindowExW(0, lpClassName, lpWindowName, (WindowStyles)dwStyle, X, Y, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
     }
 
     /// <summary>
@@ -340,12 +358,19 @@ public static partial class User32
     [DllImport("user32.dll")]
     public static extern IntPtr GetForegroundWindow();
 
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool IsIconic(IntPtr hWnd);
+
+    [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+    public static extern bool SetWindowText(IntPtr hwnd, String lpString);
+
     [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     public static extern IntPtr CreateWindowExW(
-    uint dwExStyle,
+    User32.WindowStylesEx dwExStyle,
      [MarshalAs(UnmanagedType.LPWStr)] string lpClassName,
      [MarshalAs(UnmanagedType.LPWStr)] string lpWindowName,
-    uint dwStyle,
+    User32.WindowStyles dwStyle,
     int X, int Y,
     int nWidth, int nHeight,
     IntPtr hWndParent, IntPtr hMenu,
@@ -380,6 +405,10 @@ public static partial class User32
     [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool DestroyWindow(IntPtr hwnd);
+
+    [return: MarshalAs(UnmanagedType.Bool)]
+    [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+    public static extern bool PostMessage(IntPtr hWnd, WindowMessage Msg, IntPtr wParam, IntPtr lParam);
 
     // This helper static method is required because the 32-bit version of user32.dll does not contain this API
     // (on any versions of Windows), so linking the method will fail at run-time. The bridge dispatches the request

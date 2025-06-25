@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Runtime.InteropServices;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 using OverlayDearImGui.Windows;
 
 namespace OverlayDearImGui;
@@ -26,6 +27,9 @@ public static unsafe class ImGuiWin32Impl
     private static IntPtr _xInputDLL;
     private static XInputGetCapabilitiesDelegate _xInputGetCapabilities;
     private static XInputGetStateDelegate _xInputGetState;
+    //private static IntPtr _classNamePtr;
+
+    //private static bool[] _imguiMouseIsDown = new bool[5];
 
     private static bool ImGui_ImplWin32_InitEx(void* windowHandle, bool platform_has_own_dc)
     {
@@ -42,18 +46,22 @@ public static unsafe class ImGuiWin32Impl
             return false;
 
         // Setup backend capabilities flags
-        io.NativePtr->BackendPlatformName = (byte*)Marshal.StringToHGlobalAnsi("imgui_impl_win32");
-        io.BackendFlags |= ImGuiBackendFlags.HasMouseCursors;         // We can honor GetMouseCursor() values (optional)
-        io.BackendFlags |= ImGuiBackendFlags.HasSetMousePos;          // We can honor io.WantSetMousePos requests (optional, rarely used)
+        io.BackendPlatformName = (byte*)Marshal.StringToHGlobalAnsi("imgui_impl_win32_c#");
+        io.BackendFlags |= ImGuiBackendFlags.HasMouseCursors | // We can honor GetMouseCursor() values (optional)
+                                                               ImGuiBackendFlags.HasSetMousePos; // We can honor io.WantSetMousePos requests (optional, rarely used)
+                                                                                                 //ImGuiBackendFlags.HasSetMousePos | // We can honor io.WantSetMousePos requests (optional, rarely used)
+                                                                                                 //ImGuiBackendFlags.PlatformHasViewports;
 
         _windowHandle = (IntPtr)windowHandle;
         _ticksPerSecond = perf_frequency;
         _time = perf_counter;
-        _lastMouseCursor = ImGuiMouseCursor.COUNT;
+        _lastMouseCursor = ImGuiMouseCursor.Count;
 
         // Set platform dependent data in viewport
-        ImGui.GetMainViewport().NativePtr->PlatformHandleRaw = windowHandle;
-        //IM_UNUSED(platform_has_own_dc); // Used in 'docking' branch
+        var viewport = ImGui.GetMainViewport();
+        viewport.PlatformHandle = viewport.PlatformHandleRaw = windowHandle;
+        //if (io.BackendFlags.HasFlag(ImGuiBackendFlags.PlatformHasViewports))
+        //ImGui_ImplWin32_InitPlatformInterface();
 
         // Dynamically load XInput library
         //_wantUpdateHasGamepad = true;
@@ -81,6 +89,693 @@ public static unsafe class ImGuiWin32Impl
         return true;
     }
 
+    //private static int GetButton(WindowMessage msg, ulong wParam)
+    //{
+    //    switch (msg)
+    //    {
+    //        case WindowMessage.WM_LBUTTONUP:
+    //        case WindowMessage.WM_LBUTTONDOWN:
+    //        case WindowMessage.WM_LBUTTONDBLCLK:
+    //            return 0;
+    //        case WindowMessage.WM_RBUTTONUP:
+    //        case WindowMessage.WM_RBUTTONDOWN:
+    //        case WindowMessage.WM_RBUTTONDBLCLK:
+    //            return 1;
+    //        case WindowMessage.WM_MBUTTONUP:
+    //        case WindowMessage.WM_MBUTTONDOWN:
+    //        case WindowMessage.WM_MBUTTONDBLCLK:
+    //            return 2;
+    //        case WindowMessage.WM_XBUTTONUP:
+    //        case WindowMessage.WM_XBUTTONDOWN:
+    //        case WindowMessage.WM_XBUTTONDBLCLK:
+    //            return GET_XBUTTON_WPARAM((IntPtr)wParam) == XBUTTON1 ? 3 : 4;
+    //        default:
+    //            return 0;
+    //    }
+    //}
+
+    /// <summary>
+    /// Processes window messages. Supports both WndProcA and WndProcW.
+    /// </summary>
+    /// <param name="hWnd">Handle of the window.</param>
+    /// <param name="msg">Type of window message.</param>
+    /// <param name="wParam">wParam.</param>
+    /// <param name="lParam">lParam.</param>
+    /// <returns>Return value, if not doing further processing.</returns>
+    //public static unsafe IntPtr? ProcessWndProcW(IntPtr hWnd, WindowMessage msg, void* wParam, void* lParam)
+    //{
+    //    if (!ImGui.GetCurrentContext().IsNull)
+    //    {
+    //        var io = ImGui.GetIO();
+
+    //        switch (msg)
+    //        {
+    //            case WindowMessage.WM_LBUTTONDOWN:
+    //            case WindowMessage.WM_LBUTTONDBLCLK:
+    //            case WindowMessage.WM_RBUTTONDOWN:
+    //            case WindowMessage.WM_RBUTTONDBLCLK:
+    //            case WindowMessage.WM_MBUTTONDOWN:
+    //            case WindowMessage.WM_MBUTTONDBLCLK:
+    //            case WindowMessage.WM_XBUTTONDOWN:
+    //            case WindowMessage.WM_XBUTTONDBLCLK:
+    //                {
+    //                    var button = GetButton(msg, (ulong)wParam);
+    //                    if (io.WantCaptureMouse)
+    //                    {
+    //                        if (!ImGui.IsAnyMouseDown() && User32.GetCapture() == IntPtr.Zero)
+    //                            User32.SetCapture(hWnd);
+
+    //                        io.MouseDown[button] = true;
+    //                        _imguiMouseIsDown[button] = true;
+    //                        return IntPtr.Zero;
+    //                    }
+    //                    break;
+    //                }
+    //            case WindowMessage.WM_LBUTTONUP:
+    //            case WindowMessage.WM_RBUTTONUP:
+    //            case WindowMessage.WM_MBUTTONUP:
+    //            case WindowMessage.WM_XBUTTONUP:
+    //                {
+    //                    var button = GetButton(msg, (ulong)wParam);
+    //                    if (io.WantCaptureMouse && _imguiMouseIsDown[button])
+    //                    {
+    //                        if (!ImGui.IsAnyMouseDown() && User32.GetCapture() == hWnd)
+    //                            User32.ReleaseCapture();
+
+    //                        io.MouseDown[button] = false;
+    //                        _imguiMouseIsDown[button] = false;
+    //                        return IntPtr.Zero;
+    //                    }
+    //                    break;
+    //                }
+    //            case WindowMessage.WM_MOUSEWHEEL:
+    //                if (io.WantCaptureMouse)
+    //                {
+    //                    io.MouseWheel += (float)GET_WHEEL_DELTA_WPARAM((IntPtr)wParam) /
+    //                                     WHEEL_DELTA;
+    //                    return IntPtr.Zero;
+    //                }
+
+    //                break;
+    //            case WindowMessage.WM_MOUSEHWHEEL:
+    //                if (io.WantCaptureMouse)
+    //                {
+    //                    io.MouseWheelH += (float)GET_WHEEL_DELTA_WPARAM((IntPtr)wParam) /
+    //                                      WHEEL_DELTA;
+    //                    return IntPtr.Zero;
+    //                }
+
+    //                break;
+    //            case WindowMessage.WM_KEYDOWN:
+    //            case WindowMessage.WM_SYSKEYDOWN:
+    //            case WindowMessage.WM_KEYUP:
+    //            case WindowMessage.WM_SYSKEYUP:
+    //                bool isKeyDown = (msg == WindowMessage.WM_KEYDOWN || msg == WindowMessage.WM_SYSKEYDOWN);
+    //                if ((int)wParam < 256)
+    //                {
+    //                    // Submit modifiers
+    //                    ImGui_ImplWin32_UpdateKeyModifiers();
+
+    //                    // Obtain virtual key code
+    //                    // (keypad enter doesn't have its own... VK_RETURN with KF_EXTENDED flag means keypad enter, see IM_VK_KEYPAD_ENTER definition for details, it is mapped to ImGuiKey.KeyPadEnter.)
+    //                    var vk = (VirtualKey)(int)wParam;
+    //                    if (((int)wParam == (int)VirtualKey.Return) && ((int)lParam & (256 << 16)) > 0)
+    //                        vk = (VirtualKey.Return + 256);
+
+    //                    // Submit key event
+    //                    var key = ImGui_ImplWin32_VirtualKeyToImGuiKey(vk);
+    //                    var scancode = ((int)lParam & 0xff0000) >> 16;
+    //                    if (key != ImGuiKey.None && io.WantTextInput)
+    //                    {
+    //                        ImGui_ImplWin32_AddKeyEvent(key, isKeyDown, vk, scancode);
+    //                        return IntPtr.Zero;
+    //                    }
+
+    //                    // Submit individual left/right modifier events
+    //                    if (vk == VirtualKey.Shift)
+    //                    {
+    //                        // Important: Shift keys tend to get stuck when pressed together, missing key-up events are corrected in ImGui_ImplWin32_ProcessKeyEventsWorkarounds()
+    //                        if (IsVkDown(VirtualKey.LeftShift) == isKeyDown) { ImGui_ImplWin32_AddKeyEvent(ImGuiKey.LeftShift, isKeyDown, VirtualKey.LeftShift, scancode); }
+    //                        if (IsVkDown(VirtualKey.RightShift) == isKeyDown) { ImGui_ImplWin32_AddKeyEvent(ImGuiKey.RightShift, isKeyDown, VirtualKey.RightShift, scancode); }
+    //                    }
+    //                    else if (vk == VirtualKey.Control)
+    //                    {
+    //                        if (IsVkDown(VirtualKey.LeftControl) == isKeyDown) { ImGui_ImplWin32_AddKeyEvent(ImGuiKey.LeftCtrl, isKeyDown, VirtualKey.LeftControl, scancode); }
+    //                        if (IsVkDown(VirtualKey.RightControl) == isKeyDown) { ImGui_ImplWin32_AddKeyEvent(ImGuiKey.RightCtrl, isKeyDown, VirtualKey.RightControl, scancode); }
+    //                    }
+    //                    else if (vk == VirtualKey.Menu)
+    //                    {
+    //                        if (IsVkDown(VirtualKey.LeftMenu) == isKeyDown) { ImGui_ImplWin32_AddKeyEvent(ImGuiKey.LeftAlt, isKeyDown, VirtualKey.LeftMenu, scancode); }
+    //                        if (IsVkDown(VirtualKey.RightMenu) == isKeyDown) { ImGui_ImplWin32_AddKeyEvent(ImGuiKey.RightAlt, isKeyDown, VirtualKey.RightMenu, scancode); }
+    //                    }
+    //                }
+    //                break;
+    //            case WindowMessage.WM_CHAR:
+    //                if (io.WantTextInput)
+    //                {
+    //                    io.AddInputCharacter((uint)wParam);
+    //                    return IntPtr.Zero;
+    //                }
+    //                break;
+    //            // this never seemed to work reasonably, but I'll leave it for now
+    //            case WindowMessage.WM_SETCURSOR:
+    //                if (io.WantCaptureMouse)
+    //                {
+    //                    const int HTCLIENT = 1;
+    //                    if (LOWORD((IntPtr)lParam) == HTCLIENT && ImGui_ImplWin32_UpdateMouseCursor())
+    //                    {
+    //                        // this message returns 1 to block further processing
+    //                        // because consistency is no fun
+    //                        return (IntPtr)1;
+    //                    }
+    //                }
+    //                break;
+    //            // TODO: Decode why IME is miserable
+    //            // case WindowMessage.WM_IME_NOTIFY:
+    //            // return HandleImeMessage(hWnd, (long) wParam, (long) lParam);
+    //            default:
+    //                break;
+    //        }
+    //    }
+
+    //    // We did not produce a result - return -1
+    //    return null;
+    //}
+
+    //private static WndProcSignature _wndProcDelegate;
+    //private delegate IntPtr WndProcSignature(IntPtr hWnd, WindowMessage msg, void* wParam, void* lParam);
+    //private static unsafe IntPtr WndProcDetour(IntPtr hWnd, WindowMessage msg, void* wParam, void* lParam)
+    //{
+    //    // Attempt to process the result of this window message
+    //    // We will return the result here if we consider the message handled
+    //    var processResult = ProcessWndProcW(hWnd, msg, wParam, lParam);
+
+    //    if (processResult != null) return processResult.Value;
+
+    //    // The message wasn't handled, but it's a platform window
+    //    // So we have to handle some messages ourselves
+    //    // BUT we might have disposed the context, so check that
+    //    if (ImGui.GetCurrentContext().IsNull)
+    //        return User32.DefWindowProc(hWnd, msg, (IntPtr)wParam, (IntPtr)lParam);
+    //    ImGuiViewportPtr viewport = ImGui.FindViewportByPlatformHandle((void*)hWnd);
+
+    //    if (!viewport.IsNull)
+    //    {
+    //        switch (msg)
+    //        {
+    //            case WindowMessage.WM_CLOSE:
+    //                viewport.PlatformRequestClose = true;
+    //                return IntPtr.Zero;
+    //            case WindowMessage.WM_MOVE:
+    //                viewport.PlatformRequestMove = true;
+    //                break;
+    //            case WindowMessage.WM_SIZE:
+    //                viewport.PlatformRequestResize = true;
+    //                break;
+    //            case WindowMessage.WM_MOUSEACTIVATE:
+    //                // We never want our platform windows to be active, or else Windows will think we
+    //                // want messages dispatched with its hWnd. We don't. The only way to activate a platform
+    //                // window is via clicking, it does not appear on the taskbar or alt-tab, so we just
+    //                // brute force behavior here.
+
+    //                // Make the game the foreground window. This prevents ImGui windows from becoming
+    //                // choppy when users have the "limit FPS" option enabled in-game
+    //                User32.SetForegroundWindow(_windowHandle);
+
+    //                // Also set the window capture to the main window, as focus will not cause
+    //                // future messages to be dispatched to the main window unless it is receiving capture
+    //                User32.SetCapture(_windowHandle);
+
+    //                // We still want to return MA_NOACTIVATE
+    //                // https://docs.microsoft.com/en-us/windows/win32/inputdev/wm-mouseactivate
+    //                return (IntPtr)0x3;
+    //            case WindowMessage.WM_NCHITTEST:
+    //                // Let mouse pass-through the window. This will allow the backend to set io.MouseHoveredViewport properly (which is OPTIONAL).
+    //                // The ImGuiViewportFlags_NoInputs flag is set while dragging a viewport, as want to detect the window behind the one we are dragging.
+    //                // If you cannot easily access those viewport flags from your windowing/event code: you may manually synchronize its state e.g. in
+    //                // your main loop after calling UpdatePlatformWindows(). Iterate all viewports/platform windows and pass the flag to your windowing system.
+    //                if (viewport.Flags.HasFlag(ImGuiViewportFlags.NoInputs))
+    //                {
+    //                    // https://docs.microsoft.com/en-us/windows/win32/inputdev/wm-nchittest
+    //                    return (IntPtr)uint.MaxValue;
+    //                }
+    //                break;
+    //        }
+    //    }
+
+    //    return User32.DefWindowProc(hWnd, msg, (IntPtr)wParam, (IntPtr)lParam);
+    //}
+
+    //private static unsafe void ImGui_ImplWin32_UpdateMonitors()
+    //{
+    //    ImGuiPlatformIOPtr platformIO = ImGui.GetPlatformIO();
+    //    int numMonitors = User32.GetSystemMetrics(User32.SystemMetric.SM_CMONITORS);
+
+    //    // Allocate the memory for ImGuiPlatformMonitor array
+    //    int sizeOfMonitor = sizeof(ImGuiPlatformMonitor);
+    //    IntPtr data = Marshal.AllocHGlobal(sizeOfMonitor * numMonitors);
+
+    //    // Initialize each element in the buffer to default
+    //    ImGuiPlatformMonitor* monitorsPtr = (ImGuiPlatformMonitor*)data;
+    //    for (int i = 0; i < numMonitors; i++)
+    //    {
+    //        monitorsPtr[i] = new ImGuiPlatformMonitor();
+    //    }
+
+    //    // Assign to ImGui's monitor list
+    //    platformIO.Monitors = new ImVector<ImGuiPlatformMonitor>(numMonitors, numMonitors, monitorsPtr);
+
+    //    // Prepare iterator
+    //    int* iterator = (int*)Marshal.AllocHGlobal(sizeof(int));
+    //    *iterator = 0;
+
+    //    bool success = User32.EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, ImGui_ImplWin32_UpdateMonitors_EnumFunc,
+    //                                               new IntPtr(iterator));
+    //}
+
+
+    //private static bool ImGui_ImplWin32_UpdateMonitors_EnumFunc(IntPtr nativeMonitor, IntPtr hdc, ref RectStruct LPRECT,
+    //                                                               IntPtr LPARAM)
+    //{
+    //    // Get and increment iterator
+    //    int monitorIndex = *(int*)LPARAM;
+    //    *(int*)LPARAM = *(int*)LPARAM + 1;
+
+    //    User32.MonitorInfoEx info = new User32.MonitorInfoEx();
+    //    info.Init();
+    //    if (!User32.GetMonitorInfo(nativeMonitor, ref info))
+    //    {
+    //        int error = Marshal.GetLastWin32Error();
+    //        Log.Error($"GetMonitorInfo failed for monitor #{monitorIndex}. Win32 error code: {error}");
+    //        return true;
+    //    }
+
+    //    if (monitorIndex >= ImGui.GetPlatformIO().Monitors.Size)
+    //    {
+    //        Log.Error($"Monitor index {monitorIndex} out of range for ImGui monitors");
+    //        return true;
+    //    }
+
+    //    // Give ImGui the info for this display
+    //    var imMonitor = ImGui.GetPlatformIO().Monitors[monitorIndex];
+    //    imMonitor.MainPos = new Vector2(info.Monitor.Left, info.Monitor.Top);
+    //    imMonitor.MainSize = new Vector2(info.Monitor.Right - info.Monitor.Left,
+    //                                     info.Monitor.Bottom - info.Monitor.Top);
+    //    imMonitor.WorkPos = new Vector2(info.WorkArea.Left, info.WorkArea.Top);
+    //    imMonitor.WorkSize =
+    //        new Vector2(info.WorkArea.Right - info.WorkArea.Left, info.WorkArea.Bottom - info.WorkArea.Top);
+    //    imMonitor.DpiScale = 1f;
+
+    //    ImGui.GetPlatformIO().Monitors[monitorIndex] = imMonitor;
+
+    //    return true;
+    //}
+
+    //private static void ImGui_ImplWin32_GetWin32StyleFromViewportFlags(ImGuiViewportFlags flags,
+    //                                                               ref User32.WindowStyles outStyle,
+    //                                                               ref User32.WindowStylesEx outExStyle)
+    //{
+    //    if (flags.HasFlag(ImGuiViewportFlags.NoDecoration))
+    //        outStyle = User32.WindowStyles.WS_POPUP;
+    //    else
+    //        outStyle = User32.WindowStyles.WS_OVERLAPPEDWINDOW;
+
+    //    if (flags.HasFlag(ImGuiViewportFlags.NoTaskBarIcon))
+    //        outExStyle = User32.WindowStylesEx.WS_EX_TOOLWINDOW;
+    //    else
+    //        outExStyle = User32.WindowStylesEx.WS_EX_APPWINDOW;
+
+    //    if (flags.HasFlag(ImGuiViewportFlags.TopMost))
+    //        outExStyle |= User32.WindowStylesEx.WS_EX_TOPMOST;
+    //}
+
+    //private static int viewportI = 0;
+    //private static void ImGui_ImplWin32_CreateWindow(ImGuiViewportPtr viewport)
+    //{
+    //    var data = (ImGuiViewportDataWin32*)Marshal.AllocHGlobal(Marshal.SizeOf<ImGuiViewportDataWin32>());
+    //    viewport.PlatformUserData = (void*)(IntPtr)data;
+    //    viewport.Flags =
+    //        (
+    //            ImGuiViewportFlags.NoTaskBarIcon |
+    //            ImGuiViewportFlags.NoFocusOnClick |
+    //            ImGuiViewportFlags.NoRendererClear |
+    //            ImGuiViewportFlags.NoFocusOnAppearing |
+    //            viewport.Flags
+    //        );
+    //    ImGui_ImplWin32_GetWin32StyleFromViewportFlags(viewport.Flags, ref data->DwStyle, ref data->DwExStyle);
+
+    //    IntPtr parentWindow = IntPtr.Zero;
+    //    if (viewport.ParentViewportId != 0)
+    //    {
+    //        ImGuiViewportPtr parentViewport = ImGui.FindViewportByID(viewport.ParentViewportId);
+    //        parentWindow = (IntPtr)parentViewport.PlatformHandle;
+    //    }
+
+    //    // Create window
+    //    RECT rect;
+    //    rect.Left = (int)viewport.Pos.X;
+    //    rect.Top = (int)viewport.Pos.Y;
+    //    rect.Right = (int)(viewport.Pos.X + viewport.Size.X);
+    //    rect.Bottom = (int)(viewport.Pos.Y + viewport.Size.Y);
+    //    User32.AdjustWindowRectEx(ref rect, data->DwStyle, false, data->DwExStyle);
+
+    //    var (hwnd, wc) = WindowFactory.CreateClassicWindow("ImGui Platform " + viewportI++);
+    //    //data->Hwnd = User32.CreateWindowExW(
+    //    //data->DwExStyle, "ImGui Platform", "Untitled", data->DwStyle,
+    //    //rect.Left, rect.Top, rect.Right - rect.Left, rect.Bottom - rect.Top,
+    //    //parentWindow, IntPtr.Zero, Kernel32.GetModuleHandle(null),
+    //    //IntPtr.Zero);
+
+    //    data->Hwnd = hwnd;
+
+    //    // User32.GetWindowThreadProcessId(data->Hwnd, out var windowProcessId);
+    //    // var currentThreadId = Kernel32.GetCurrentThreadId();
+    //    // var currentProcessId = Kernel32.GetCurrentProcessId();
+
+    //    // Allow transparent windows
+    //    // TODO: Eventually...
+    //    ImGui_ImplWin32_EnableAlphaCompositing(data->Hwnd);
+
+    //    data->HwndOwned = true;
+    //    viewport.PlatformRequestResize = false;
+    //    viewport.PlatformHandle = viewport.PlatformHandleRaw = (void*)data->Hwnd;
+    //}
+
+    //private static void ImGui_ImplWin32_DestroyWindow(ImGuiViewportPtr viewport)
+    //{
+    //    // This is also called on the main viewport for some reason, and we never set that viewport's PlatformUserData
+    //    if (viewport.PlatformUserData == null) return;
+
+    //    var data = (ImGuiViewportDataWin32*)viewport.PlatformUserData;
+
+    //    if (User32.GetCapture() == data->Hwnd)
+    //    {
+    //        // Transfer capture so if we started dragging from a window that later disappears, we'll still receive the MOUSEUP event.
+    //        User32.ReleaseCapture();
+    //        User32.SetCapture(_windowHandle);
+    //    }
+
+    //    if (data->Hwnd != IntPtr.Zero && data->HwndOwned)
+    //    {
+    //        var result = User32.DestroyWindow(data->Hwnd);
+
+    //        const int ERROR_ACCESS_DENIED = 0x5;
+    //        if (result == false && Marshal.GetLastWin32Error() == ERROR_ACCESS_DENIED)
+    //        {
+    //            // We are disposing, and we're doing it from a different thread because of course we are
+    //            // Just send the window the close message
+    //            User32.PostMessage(data->Hwnd, WindowMessage.WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
+    //        }
+    //    }
+
+    //    data->Hwnd = IntPtr.Zero;
+    //    Marshal.FreeHGlobal((IntPtr)viewport.PlatformUserData);
+    //    viewport.PlatformUserData = viewport.PlatformHandle = null;
+    //}
+
+    //private static void ImGui_ImplWin32_ShowWindow(ImGuiViewportPtr viewport)
+    //{
+    //    var data = (ImGuiViewportDataWin32*)viewport.PlatformUserData;
+
+    //    if (viewport.Flags.HasFlag(ImGuiViewportFlags.NoFocusOnAppearing))
+    //        User32.ShowWindow(data->Hwnd, ShowWindowCommand.ShowNoActivate);
+    //    else
+    //        User32.ShowWindow(data->Hwnd, ShowWindowCommand.Show);
+    //}
+
+    //static readonly IntPtr HWND_TOPMOST = new IntPtr(-1);
+    //static readonly IntPtr HWND_NOTOPMOST = new IntPtr(-2);
+    //static readonly IntPtr HWND_TOP = new IntPtr(0);
+    //static readonly IntPtr HWND_BOTTOM = new IntPtr(1);
+
+    //static readonly int GWL_STYLE = -16;
+
+    //public const int SWP_NOZORDER = 0x0004;
+    //public const int SWP_NOACTIVATE = 0x0010;
+    //public const int SWP_FRAMECHANGED = 0x0020;
+    //public const int SWP_NOMOVE = 0x0002;
+    //public const int SWP_NOSIZE = 0x0001;
+
+    //private static void ImGui_ImplWin32_UpdateWindow(ImGuiViewportPtr viewport)
+    //{
+    //    // (Optional) Update Win32 style if it changed _after_ creation.
+    //    // Generally they won't change unless configuration flags are changed, but advanced uses (such as manually rewriting viewport flags) make this useful.
+    //    var data = (ImGuiViewportDataWin32*)viewport.PlatformUserData;
+
+    //    viewport.Flags =
+    //        (
+    //            ImGuiViewportFlags.NoTaskBarIcon |
+    //            ImGuiViewportFlags.NoFocusOnClick |
+    //            ImGuiViewportFlags.NoRendererClear |
+    //            ImGuiViewportFlags.NoFocusOnAppearing |
+    //            viewport.Flags
+    //        );
+    //    User32.WindowStyles newStyle = 0;
+    //    User32.WindowStylesEx newExStyle = 0;
+    //    ImGui_ImplWin32_GetWin32StyleFromViewportFlags(viewport.Flags, ref newStyle, ref newExStyle);
+
+    //    // Only reapply the flags that have been changed from our point of view (as other flags are being modified by Windows)
+    //    if (data->DwStyle != newStyle || data->DwExStyle != newExStyle)
+    //    {
+    //        // (Optional) Update TopMost state if it changed _after_ creation
+    //        bool topMostChanged = (data->DwExStyle & User32.WindowStylesEx.WS_EX_TOPMOST) !=
+    //                              (newExStyle & User32.WindowStylesEx.WS_EX_TOPMOST);
+
+    //        IntPtr insertAfter = IntPtr.Zero;
+    //        if (topMostChanged)
+    //        {
+    //            if (viewport.Flags.HasFlag(ImGuiViewportFlags.TopMost))
+    //                insertAfter = HWND_TOPMOST;
+    //            else
+    //                insertAfter = HWND_NOTOPMOST;
+    //        }
+
+    //        var swpFlag = topMostChanged ? 0 : SWP_NOZORDER;
+
+    //        // Apply flags and position (since it is affected by flags)
+    //        data->DwStyle = newStyle;
+    //        data->DwExStyle = newExStyle;
+
+    //        User32.SetWindowLongPtr(data->Hwnd, GWL_STYLE,
+    //                             (IntPtr)data->DwStyle);
+    //        User32.SetWindowLongPtr(data->Hwnd, GWL_EXSTYLE,
+    //                             (IntPtr)data->DwExStyle);
+
+    //        // Create window
+    //        RECT rect;
+    //        rect.Left = (int)viewport.Pos.X;
+    //        rect.Top = (int)viewport.Pos.Y;
+    //        rect.Right = (int)(viewport.Pos.X + viewport.Size.X);
+    //        rect.Bottom = (int)(viewport.Pos.Y + viewport.Size.Y);
+    //        User32.AdjustWindowRectEx(ref rect, data->DwStyle, false, data->DwExStyle);
+    //        User32.SetWindowPos(data->Hwnd, insertAfter,
+    //                            rect.Left, rect.Top, rect.Right - rect.Left, rect.Bottom - rect.Top,
+    //                            (uint)swpFlag |
+    //                            SWP_NOACTIVATE |
+    //                            SWP_FRAMECHANGED);
+
+    //        // This is necessary when we alter the style
+    //        User32.ShowWindow(data->Hwnd, ShowWindowCommand.ShowNoActivate);
+    //        viewport.PlatformRequestMove = viewport.PlatformRequestResize = true;
+    //    }
+    //}
+
+    //private static unsafe Vector2* ImGui_ImplWin32_GetWindowPos(IntPtr unk, ImGuiViewportPtr viewport)
+    //{
+    //    var data = (ImGuiViewportDataWin32*)viewport.PlatformUserData;
+    //    var vec2 = (Vector2*)Marshal.AllocHGlobal(Marshal.SizeOf<Vector2>());
+
+    //    POINT pt = new POINT { X = 0, Y = 0 };
+    //    User32.ClientToScreen(data->Hwnd, ref pt);
+    //    vec2->X = pt.X;
+    //    vec2->Y = pt.Y;
+
+    //    return vec2;
+    //}
+
+    //private static void ImGui_ImplWin32_SetWindowPos(ImGuiViewportPtr viewport, Vector2 pos)
+    //{
+    //    var data = (ImGuiViewportDataWin32*)viewport.PlatformUserData;
+
+    //    RECT rect;
+    //    rect.Left = (int)pos.X;
+    //    rect.Top = (int)pos.Y;
+    //    rect.Right = (int)pos.X;
+    //    rect.Bottom = (int)pos.Y;
+
+    //    User32.AdjustWindowRectEx(ref rect, data->DwStyle, false, data->DwExStyle);
+    //    User32.SetWindowPos(data->Hwnd, IntPtr.Zero,
+    //                        rect.Left, rect.Top, 0, 0,
+    //                        SWP_NOZORDER |
+    //                        SWP_NOSIZE |
+    //                        SWP_NOACTIVATE);
+    //}
+
+    //private static Vector2* ImGui_ImplWin32_GetWindowSize(IntPtr size, ImGuiViewportPtr viewport)
+    //{
+    //    var data = (ImGuiViewportDataWin32*)viewport.PlatformUserData;
+    //    var vec2 = (Vector2*)Marshal.AllocHGlobal(Marshal.SizeOf<Vector2>());
+
+    //    User32.GetClientRect(data->Hwnd, out var rect);
+    //    vec2->X = rect.Right - rect.Left;
+    //    vec2->Y = rect.Bottom - rect.Top;
+
+    //    return vec2;
+    //}
+
+    //private static void ImGui_ImplWin32_SetWindowSize(ImGuiViewportPtr viewport, Vector2 size)
+    //{
+    //    var data = (ImGuiViewportDataWin32*)viewport.PlatformUserData;
+
+    //    RECT rect;
+    //    rect.Left = 0;
+    //    rect.Top = 0;
+    //    rect.Right = (int)size.X;
+    //    rect.Bottom = (int)size.Y;
+
+    //    User32.AdjustWindowRectEx(ref rect, data->DwStyle, false, data->DwExStyle);
+    //    User32.SetWindowPos(data->Hwnd, IntPtr.Zero,
+    //                        0, 0, rect.Right - rect.Left, rect.Bottom - rect.Top,
+    //                        SWP_NOZORDER |
+    //                        SWP_NOMOVE |
+    //                        SWP_NOACTIVATE);
+    //}
+
+    //private static void ImGui_ImplWin32_SetWindowFocus(ImGuiViewportPtr viewport)
+    //{
+    //    var data = (ImGuiViewportDataWin32*)viewport.PlatformUserData;
+
+    //    User32.BringWindowToTop(data->Hwnd);
+    //    User32.SetForegroundWindow(data->Hwnd);
+    //    User32.SetFocus(data->Hwnd);
+    //}
+
+    //private static bool ImGui_ImplWin32_GetWindowFocus(ImGuiViewportPtr viewport)
+    //{
+    //    var data = (ImGuiViewportDataWin32*)viewport.PlatformUserData;
+    //    return User32.GetForegroundWindow() == data->Hwnd;
+    //}
+
+    //private static byte ImGui_ImplWin32_GetWindowMinimized(ImGuiViewportPtr viewport)
+    //{
+    //    var data = (ImGuiViewportDataWin32*)viewport.PlatformUserData;
+    //    return (byte)(User32.IsIconic(data->Hwnd) ? 1 : 0);
+    //}
+
+    //private static void ImGui_ImplWin32_SetWindowTitle(ImGuiViewportPtr viewport, string title)
+    //{
+    //    var data = (ImGuiViewportDataWin32*)viewport.PlatformUserData;
+    //    User32.SetWindowText(data->Hwnd, title);
+    //}
+
+    //private static void ImGui_ImplWin32_SetWindowAlpha(ImGuiViewportPtr viewport, float alpha)
+    //{
+    //    var data = (ImGuiViewportDataWin32*)viewport.PlatformUserData;
+
+    //    if (alpha < 1.0f)
+    //    {
+    //        User32.WindowStylesEx gwl =
+    //            (User32.WindowStylesEx)User32.GetWindowLongPtr(data->Hwnd, GWL_EXSTYLE);
+    //        User32.WindowStylesEx style = gwl | User32.WindowStylesEx.WS_EX_LAYERED;
+    //        User32.SetWindowLongPtr(data->Hwnd, GWL_EXSTYLE,
+    //                             (IntPtr)style);
+    //        User32.SetLayeredWindowAttributes(data->Hwnd, 0, (byte)(255 * alpha), 0x2); //0x2 = LWA_ALPHA
+    //    }
+    //    else
+    //    {
+    //        User32.WindowStylesEx gwl =
+    //            (User32.WindowStylesEx)User32.GetWindowLongPtr(data->Hwnd, GWL_EXSTYLE);
+    //        User32.WindowStylesEx style = gwl & ~User32.WindowStylesEx.WS_EX_LAYERED;
+    //        User32.SetWindowLongPtr(data->Hwnd, GWL_EXSTYLE,
+    //                             (IntPtr)style);
+    //    }
+    //}
+
+    // TODO: Decode why IME is miserable
+    // private void ImGui_ImplWin32_SetImeInputPos(ImGuiViewportPtr viewport, Vector2 pos) {
+    //     Win32.COMPOSITIONFORM cs = new Win32.COMPOSITIONFORM(
+    //         0x20,
+    //         new Win32.POINT(
+    //             (int) (pos.X - viewport.Pos.X),
+    //             (int) (pos.Y - viewport.Pos.Y)),
+    //         new Win32.RECT(0, 0, 0, 0)
+    //     );
+    //     var hwnd = viewport.PlatformHandle;
+    //     if (hwnd != IntPtr.Zero) {
+    //         var himc = Win32.ImmGetContext(hwnd);
+    //         if (himc != IntPtr.Zero) {
+    //             Win32.ImmSetCompositionWindow(himc, ref cs);
+    //             Win32.ImmReleaseContext(hwnd, himc);
+    //         }
+    //     }
+    // }
+
+    // TODO Alpha when it's no longer forced
+    //private static void ImGui_ImplWin32_EnableAlphaCompositing(IntPtr hwnd)
+    //{
+    //}
+
+    //private static unsafe void ImGui_ImplWin32_InitPlatformInterface()
+    //{
+    //    _classNamePtr = Marshal.StringToHGlobalUni("OverlayDearImGui Platform");
+
+    //    _wndProcDelegate = WndProcDetour;
+
+    //    var wcex = new WNDCLASSEXW();
+    //    wcex.cbSize = (uint)Marshal.SizeOf(wcex);
+    //    wcex.style = User32.CS_HREDRAW | User32.CS_VREDRAW;
+    //    wcex.cbClsExtra = 0;
+    //    wcex.cbWndExtra = 0;
+    //    wcex.hInstance = Kernel32.GetModuleHandle(null);
+    //    wcex.hIcon = IntPtr.Zero;
+    //    wcex.hCursor = IntPtr.Zero;
+    //    wcex.hbrBackground = new IntPtr(2); // COLOR_BACKGROUND is 1, so...
+    //    wcex.lpfnWndProc = Marshal.GetFunctionPointerForDelegate(_wndProcDelegate);
+    //    wcex.lpszMenuName = null;
+    //    wcex.lpszClassName = _classNamePtr;
+
+    //    wcex.hIconSm = IntPtr.Zero;
+    //    User32.RegisterClassEx(ref wcex);
+
+    //    ImGui_ImplWin32_UpdateMonitors();
+
+    //    // Register platform interface (will be coupled with a renderer interface)
+    //    ImGuiPlatformIOPtr io = ImGui.GetPlatformIO();
+    //    io.PlatformCreateWindow = (void*)Marshal.GetFunctionPointerForDelegate(ImGui_ImplWin32_CreateWindow);
+    //    io.PlatformDestroyWindow = (void*)Marshal.GetFunctionPointerForDelegate(ImGui_ImplWin32_DestroyWindow);
+    //    io.PlatformShowWindow = (void*)Marshal.GetFunctionPointerForDelegate(ImGui_ImplWin32_ShowWindow);
+    //    io.PlatformSetWindowPos = (void*)Marshal.GetFunctionPointerForDelegate(ImGui_ImplWin32_SetWindowPos);
+    //    io.PlatformGetWindowPos = (void*)Marshal.GetFunctionPointerForDelegate(ImGui_ImplWin32_GetWindowPos);
+    //    io.PlatformSetWindowSize = (void*)Marshal.GetFunctionPointerForDelegate(ImGui_ImplWin32_SetWindowSize);
+    //    io.PlatformGetWindowSize = (void*)Marshal.GetFunctionPointerForDelegate(ImGui_ImplWin32_GetWindowSize);
+    //    io.PlatformSetWindowFocus = (void*)Marshal.GetFunctionPointerForDelegate(ImGui_ImplWin32_SetWindowFocus);
+    //    io.PlatformGetWindowFocus = (void*)Marshal.GetFunctionPointerForDelegate(ImGui_ImplWin32_GetWindowFocus);
+    //    io.PlatformGetWindowMinimized = (void*)Marshal.GetFunctionPointerForDelegate(ImGui_ImplWin32_GetWindowMinimized);
+    //    io.PlatformSetWindowTitle = (void*)Marshal.GetFunctionPointerForDelegate(ImGui_ImplWin32_SetWindowTitle);
+    //    io.PlatformSetWindowAlpha = (void*)Marshal.GetFunctionPointerForDelegate(ImGui_ImplWin32_SetWindowAlpha);
+    //    io.PlatformUpdateWindow = (void*)Marshal.GetFunctionPointerForDelegate(ImGui_ImplWin32_UpdateWindow);
+    //    // io.Platform_SetImeInputPos = Marshal.GetFunctionPointerForDelegate(MonitorsetImeInputPos);
+
+    //    // Register main window handle (which is owned by the main application, not by us)
+    //    // This is mostly for simplicity and consistency, so that our code (e.g. mouse handling etc.) can use same logic for main and secondary viewports.
+    //    ImGuiViewportPtr mainViewport = ImGui.GetMainViewport();
+
+    //    var data = (ImGuiViewportDataWin32*)Marshal.AllocHGlobal(Marshal.SizeOf<ImGuiViewportDataWin32>());
+    //    mainViewport.PlatformUserData = (void*)(IntPtr)data;
+    //    data->Hwnd = _windowHandle;
+    //    data->HwndOwned = false;
+    //    mainViewport.PlatformHandle = (void*)_windowHandle;
+    //}
+
+    //// Helper structure we store in the void* RenderUserData field of each ImGuiViewport to easily retrieve our backend data->
+    //private struct ImGuiViewportDataWin32
+    //{
+    //    public IntPtr Hwnd;
+    //    public bool HwndOwned;
+    //    public User32.WindowStyles DwStyle;
+    //    public User32.WindowStylesEx DwExStyle;
+    //}
+
     public static bool ImGui_ImplWin32_Init(void* hwnd)
     {
         return ImGui_ImplWin32_InitEx(hwnd, false);
@@ -106,8 +801,8 @@ public static unsafe class ImGuiWin32Impl
         if (_xInputDLL != IntPtr.Zero)
             Kernel32.FreeLibrary(_xInputDLL);
 
-        io.NativePtr->BackendPlatformName = null;
-        io.NativePtr->BackendPlatformUserData = null;
+        io.BackendPlatformName = null;
+        io.BackendPlatformUserData = null;
         io.BackendFlags &= ~(ImGuiBackendFlags.HasMouseCursors | ImGuiBackendFlags.HasSetMousePos | ImGuiBackendFlags.HasGamepad);
     }
 
@@ -142,10 +837,10 @@ public static unsafe class ImGuiWin32Impl
                 case ImGuiMouseCursor.Arrow: win32_cursor = IDC_ARROW; break;
                 case ImGuiMouseCursor.TextInput: win32_cursor = IDC_IBEAM; break;
                 case ImGuiMouseCursor.ResizeAll: win32_cursor = IDC_SIZEALL; break;
-                case ImGuiMouseCursor.ResizeEW: win32_cursor = IDC_SIZEWE; break;
-                case ImGuiMouseCursor.ResizeNS: win32_cursor = IDC_SIZENS; break;
-                case ImGuiMouseCursor.ResizeNESW: win32_cursor = IDC_SIZENESW; break;
-                case ImGuiMouseCursor.ResizeNWSE: win32_cursor = IDC_SIZENWSE; break;
+                case ImGuiMouseCursor.ResizeEw: win32_cursor = IDC_SIZEWE; break;
+                case ImGuiMouseCursor.ResizeNs: win32_cursor = IDC_SIZENS; break;
+                case ImGuiMouseCursor.ResizeNesw: win32_cursor = IDC_SIZENESW; break;
+                case ImGuiMouseCursor.ResizeNwse: win32_cursor = IDC_SIZENWSE; break;
                 case ImGuiMouseCursor.Hand: win32_cursor = IDC_HAND; break;
                 case ImGuiMouseCursor.NotAllowed: win32_cursor = IDC_NO; break;
             }
@@ -201,7 +896,7 @@ public static unsafe class ImGuiWin32Impl
             // (Optional) Set OS mouse position from Dear ImGui if requested (rarely used, only when ImGuiConfigFlags_NavEnableSetMousePos is enabled by user)
             if (io.WantSetMousePos)
             {
-                User32.POINT pos = new User32.POINT((int)io.MousePos.x, (int)io.MousePos.y);
+                User32.POINT pos = new User32.POINT((int)io.MousePos.X, (int)io.MousePos.Y);
                 if (User32.ClientToScreen(_windowHandle, ref pos))
                     User32.SetCursorPos(pos.X, pos.Y);
             }
@@ -273,11 +968,11 @@ public static unsafe class ImGuiWin32Impl
 
         // Setup display size (every frame to accommodate for window resizing)
         User32.GetClientRect(_windowHandle, out var rect);
-        io.NativePtr->DisplaySize = new Vector2(rect.Right - rect.Left, rect.Bottom - rect.Top);
+        io.DisplaySize = new Vector2(rect.Right - rect.Left, rect.Bottom - rect.Top);
 
         // Setup time step
         Kernel32.QueryPerformanceCounter(out var current_time);
-        io.NativePtr->DeltaTime = (float)(current_time - _time) / _ticksPerSecond;
+        io.DeltaTime = (float)(current_time - _time) / _ticksPerSecond;
         _time = current_time;
 
         // Update OS mouse position
@@ -361,16 +1056,16 @@ public static unsafe class ImGuiWin32Impl
             case VirtualKey.RightMenu: return ImGuiKey.RightAlt;
             case VirtualKey.RightWindows: return ImGuiKey.RightSuper;
             case VirtualKey.Application: return ImGuiKey.Menu;
-            case (VirtualKey)'0': return ImGuiKey._0;
-            case (VirtualKey)'1': return ImGuiKey._1;
-            case (VirtualKey)'2': return ImGuiKey._2;
-            case (VirtualKey)'3': return ImGuiKey._3;
-            case (VirtualKey)'4': return ImGuiKey._4;
-            case (VirtualKey)'5': return ImGuiKey._5;
-            case (VirtualKey)'6': return ImGuiKey._6;
-            case (VirtualKey)'7': return ImGuiKey._7;
-            case (VirtualKey)'8': return ImGuiKey._8;
-            case (VirtualKey)'9': return ImGuiKey._9;
+            case (VirtualKey)'0': return ImGuiKey.Key0;
+            case (VirtualKey)'1': return ImGuiKey.Key1;
+            case (VirtualKey)'2': return ImGuiKey.Key2;
+            case (VirtualKey)'3': return ImGuiKey.Key3;
+            case (VirtualKey)'4': return ImGuiKey.Key4;
+            case (VirtualKey)'5': return ImGuiKey.Key5;
+            case (VirtualKey)'6': return ImGuiKey.Key6;
+            case (VirtualKey)'7': return ImGuiKey.Key7;
+            case (VirtualKey)'8': return ImGuiKey.Key8;
+            case (VirtualKey)'9': return ImGuiKey.Key9;
             case (VirtualKey)'A': return ImGuiKey.A;
             case (VirtualKey)'B': return ImGuiKey.B;
             case (VirtualKey)'C': return ImGuiKey.C;
@@ -414,7 +1109,7 @@ public static unsafe class ImGuiWin32Impl
     }
 
     // See https://learn.microsoft.com/en-us/windows/win32/tablet/system-events-and-mouse-messages
-    // Prefer to call this at the top of the message handler to avoid the possibility of other Win32 calls interfering with this.
+    // Prefer to call this at the top of the message handler to avoid the possibility of other Win32 calls interfering with Monitor
     static ImGuiMouseSource GetMouseSourceFromMessageExtraInfo()
     {
         var extra_info = (uint)User32.GetMessageExtraInfo();
@@ -461,7 +1156,7 @@ public static unsafe class ImGuiWin32Impl
 
     public static IntPtr WndProcHandler(IntPtr hwnd, WindowMessage msg, IntPtr wParam, IntPtr lParam)
     {
-        if (ImGui.GetCurrentContext() == IntPtr.Zero)
+        if (ImGui.GetCurrentContext().IsNull)
             return IntPtr.Zero;
 
         var io = ImGui.GetIO();
