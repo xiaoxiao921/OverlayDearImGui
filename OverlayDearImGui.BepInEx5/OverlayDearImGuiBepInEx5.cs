@@ -36,7 +36,7 @@ public partial class OverlayDearImGuiBepInEx5 : BaseUnityPlugin
             }
         });
         _renderThread.Start();
-        Overlay.OnRender += MyUI;
+        //Overlay.OnRender += MyUI;
     }
 
     private void Update()
