@@ -27,8 +27,12 @@ source = "./ReleaseOutput"
 target = "./plugins/OverlayDearImGui.Shared"
 
 [[build.copy]]
-source = "../libs/netstandard2.0"
-target = "./plugins/OverlayDearImGui.Shared"
+source = "../libs/netstandard2.0/System.Runtime.dll"
+target = "./plugins/OverlayDearImGui.Shared/System.Runtime.dll"
+
+[[build.copy]]
+source = "../libs/netstandard2.0/cimgui.dll"
+target = "./plugins/OverlayDearImGui.Shared/cimgui.dll"
 
 [[build.copy]]
 source = "./Assets"
