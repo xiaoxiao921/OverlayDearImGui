@@ -80,7 +80,7 @@ jobs:
           # Check NuGet
           existing_nuget=$(curl --compressed -s "https://api-v2v3search-0.nuget.org/query?q=packageid:${nuget_package_name}&prerelease=true&semVerLevel=2.0.0" | jq '.data[0]?.versions[]?.version' | grep "${version}\"" || true)
           if [ -z "$existing_nuget" ]; then
-            dotnet pack "$csproj" --configuration Release /p:PackageOutputPath="$dir/ReleaseOutput" /p:OutputPath="$dir/ReleaseOutput"
+            dotnet pack "$csproj" --configuration Release /p:PackageOutputPath="./ReleaseOutput" /p:OutputPath="./ReleaseOutput"
             is_project_built=true
             nuget setapikey "${{ secrets.NUGET_API_KEY }}"
             nuget push "$dir/ReleaseOutput/*.nupkg" -Source 'https://api.nuget.org/v3/index.json'
@@ -91,7 +91,7 @@ jobs:
           existing_ts=$(curl --compressed -s "https://thunderstore.io/api/v1/package/" | jq --arg package_name "$namespace-$name_underscore_separator" '.[]? | select(.full_name|startswith($package_name)) | .versions[0]?.version_number' | grep "${version}\"" || true)
           if [ -z "$existing_ts" ]; then
             if [ "$is_project_built" = false ]; then
-              dotnet pack "$csproj" --configuration Release /p:PackageOutputPath="$dir/ReleaseOutput" /p:OutputPath="$dir/ReleaseOutput"
+              dotnet pack "$csproj" --configuration Release /p:PackageOutputPath="./ReleaseOutput" /p:OutputPath="./ReleaseOutput"
             fi
 
             find "$dir" -name '*.pdb' -type f -delete
