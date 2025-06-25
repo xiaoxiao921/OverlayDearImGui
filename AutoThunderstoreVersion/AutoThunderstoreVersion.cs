@@ -5,11 +5,15 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace AutoThunderstoreVersion;
 
 [Generator]
-internal class AutoThunderstoreVerison : ISourceGenerator
+internal class AutoThunderstoreVersion : ISourceGenerator
 {
-
     [DllImport("user32.dll", CharSet = CharSet.Auto)]
-    public static extern int MessageBox(IntPtr hWnd, String text, String caption, int options);
+    internal static extern int MessageBox(IntPtr hWnd, String text, String caption, int options);
+
+    internal static void DebugMessageBox(object data)
+    {
+        MessageBox(IntPtr.Zero, data.ToString(), "Debug AutoThunderstoreVersion", 0);
+    }
 
     private const string AttributeSource = @"
 namespace AutoThunderstoreVersion;
@@ -34,7 +38,7 @@ internal class AutoVersionAttribute : System.Attribute {}
             return;
 
         ctx.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.projectdir", out var projectDir);
-        var thunderstoreProject = Path.Combine(projectDir!, "..", "thunderstore.toml");
+        var thunderstoreProject = Path.Combine(projectDir!, "thunderstore.toml");
         if (!File.Exists(thunderstoreProject))
         {
             return;

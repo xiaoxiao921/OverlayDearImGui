@@ -224,13 +224,13 @@ public static class ImGuiDX11Impl
                 else
                 {
                     // Project scissor/clipping rectangles into framebuffer space
-                    var clip_min = new System.Numerics.Vector2(pcmd.ClipRect.x - clip_off.x, pcmd.ClipRect.y - clip_off.y);
-                    var clip_max = new System.Numerics.Vector2(pcmd.ClipRect.z - clip_off.x, pcmd.ClipRect.w - clip_off.y);
-                    if (clip_max.X <= clip_min.X || clip_max.Y <= clip_min.Y)
+                    var clip_min = new Vector2(pcmd.ClipRect.x - clip_off.x, pcmd.ClipRect.y - clip_off.y);
+                    var clip_max = new Vector2(pcmd.ClipRect.z - clip_off.x, pcmd.ClipRect.w - clip_off.y);
+                    if (clip_max.x <= clip_min.x || clip_max.y <= clip_min.y)
                         continue;
 
                     // Apply scissor/clipping rectangle
-                    RawRectangle r = new((int)clip_min.X, (int)clip_min.Y, (int)clip_max.X, (int)clip_max.Y);
+                    RawRectangle r = new((int)clip_min.x, (int)clip_min.y, (int)clip_max.x, (int)clip_max.y);
                     ctx.Rasterizer.SetScissorRectangles(r);
 
                     ctx.PixelShader.SetShaderResource(0, new(pcmd.TextureId));

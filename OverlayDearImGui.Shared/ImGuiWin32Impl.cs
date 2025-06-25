@@ -273,7 +273,7 @@ public static unsafe class ImGuiWin32Impl
 
         // Setup display size (every frame to accommodate for window resizing)
         User32.GetClientRect(_windowHandle, out var rect);
-        io.NativePtr->DisplaySize = new UnityEngine.Vector2(rect.Right - rect.Left, rect.Bottom - rect.Top);
+        io.NativePtr->DisplaySize = new Vector2(rect.Right - rect.Left, rect.Bottom - rect.Top);
 
         // Setup time step
         Kernel32.QueryPerformanceCounter(out var current_time);

@@ -1,11 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>netstandard2.1</TargetFrameworks>
+		<TargetFrameworks>netstandard2.0</TargetFrameworks>
 		<LangVersion>preview</LangVersion>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 
 		<RestoreAdditionalProjectSources>
 			https://api.nuget.org/v3/index.json;
@@ -27,20 +28,23 @@
 		<PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All"/>
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
 		<PackageReference Include="netstandard2.0.SharpDX" Version="4.2.1-beta0-g7abb72df54" />
 		<PackageReference Include="netstandard2.0.SharpDX.Direct3D11" Version="4.2.1-beta0-g7abb72df54" />
 		<PackageReference Include="netstandard2.0.SharpDX.DXGI" Version="4.2.1-beta0-g7abb72df54" />
 
 		<Reference Include="ImGui.NET">
-			<HintPath>../libs/netstandard2.1/ImGui.NET.dll</HintPath>
+			<HintPath>../libs/netstandard2.0/ImGui.NET.dll</HintPath>
 		</Reference>
 		<Reference Include="System.Runtime.CompilerServices.Unsafe">
-			<HintPath>../libs/netstandard2.1/System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+			<HintPath>../libs/netstandard2.0/System.Runtime.CompilerServices.Unsafe.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include="../libs/**" Pack="True" PackagePath="lib\" />
+		<Content Include="../libs\**\*">
+			<Pack>true</Pack>
+			<PackagePath>lib\</PackagePath>
+		</Content>
 	</ItemGroup>
 </Project>

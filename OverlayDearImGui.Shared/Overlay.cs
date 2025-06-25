@@ -195,41 +195,6 @@ public class Overlay
 
         if (Overlay.IsOpen)
         {
-            if (ImGui.BeginMainMenuBar())
-            {
-                ImGui.SetNextWindowSize(new(400.0f, 0));
-                if (ImGui.BeginMenu("GUI"))
-                {
-                    //if (ImGui.Checkbox("Open GUI At Startup", &m_is_open_at_startup->ref< bool > ()))
-                    {
-                        //save_pref();
-                    }
-
-                    //if (ImGui.Hotkey("Open GUI Keybind", g_gui_toggle))
-                    {
-                        //editing_gui_keybind = true;
-                    }
-
-                    ImGui.EndMenu();
-                }
-
-                if (ImGui.BeginMenu("Mods"))
-                {
-                    //g_lua_manager->draw_menu_bar_callbacks();
-
-                    ImGui.EndMenu();
-                }
-
-                if (ImGui.BeginMenu("Config"))
-                {
-                    //toml_v2::config_file::imgui_config_file();
-
-                    ImGui.EndMenu();
-                }
-
-                ImGui.EndMainMenuBar();
-            }
-
             if (Overlay.OnRender != null)
             {
                 foreach (Action item in Overlay.OnRender.GetInvocationList())

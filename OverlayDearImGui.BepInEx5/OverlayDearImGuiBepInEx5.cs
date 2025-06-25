@@ -36,6 +36,7 @@ public partial class OverlayDearImGuiBepInEx5 : BaseUnityPlugin
             }
         });
         _renderThread.Start();
+        Overlay.OnRender += MyUI;
     }
 
     private void Update()
@@ -48,9 +49,6 @@ public partial class OverlayDearImGuiBepInEx5 : BaseUnityPlugin
 
     private static void MyUI()
     {
-        if (!Overlay.IsOpen)
-            return;
-
         if (ImGui.BeginMainMenuBar())
         {
             if (ImGui.BeginMenu("Debug", true))
