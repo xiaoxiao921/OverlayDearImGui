@@ -1,8 +1,10 @@
 using System;
+using System.IO;
 using System.Threading;
 using BepInEx;
 using ImGuiNET;
 using UnityEngine;
+using static OverlayDearImGui.Windows.User32;
 
 namespace OverlayDearImGui;
 
@@ -14,7 +16,7 @@ public partial class OverlayDearImGuiBepInEx5 : BaseUnityPlugin
 {
     public const string PluginGUID = PluginAuthor + "." + PluginName;
     public const string PluginAuthor = "iDeathHD";
-    public const string PluginName = "OverlayDearImGui";
+    public const string PluginName = "OverlayDearImGui_BepInEx5";
 
     private static Thread _renderThread;
 
@@ -24,11 +26,21 @@ public partial class OverlayDearImGuiBepInEx5 : BaseUnityPlugin
     {
         Log.Init(new LogBepInEx5(Logger));
 
+        var toggleKey = new ConfigEntryBepInEx5<VirtualKey>(
+            Config.Bind("Keybinds", "OverlayToggle",
+            Overlay.OverlayToggleDefault,
+            "Key for toggling the overlay.")
+        );
+
         _renderThread = new Thread(() =>
         {
             try
             {
-                new Overlay().Render(null, "UnityWndClass");
+                new Overlay().Render(null, "UnityWndClass",
+                    Path.Combine(Path.GetDirectoryName(Info.Location), "Assets"),
+                    Paths.ConfigPath,
+                    toggleKey
+                );
             }
             catch (Exception e)
             {
@@ -36,7 +48,6 @@ public partial class OverlayDearImGuiBepInEx5 : BaseUnityPlugin
             }
         });
         _renderThread.Start();
-        //Overlay.OnRender += MyUI;
     }
 
     private void Update()

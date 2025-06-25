@@ -1,4 +1,4 @@
-# OverlayDearImGui.BepInEx5.NS21
+# OverlayDearImGui.BepInEx5
 
 Creates an overlay window that renders [Dear ImGui](https://github.com/ocornut/imgui) over the process of your choice.
 
@@ -8,96 +8,78 @@ The keybind for bringing up the cursor for interaction is by default the `Insert
 
 ## Mod Developers
 
-Download this package and add a reference to `DearImguiSharp.dll` and `DearImGuiInjection.dll` in your C# project.
+Download this package and the OverlayDearImGui.Shared dependency. Add a reference to `ImGui.NET.dll` and `OverlayDearImGui.BepInEx5.dll` in your C# project.
 
-Above your `BaseUnityPlugin` class definition
+Above your `BaseUnityPlugin` class definition:
+
 ```csharp
-[BepInDependency(DearImGuiInjection.Metadata.GUID)]
+[BepInDependency(OverlayDearImGuiBepInEx5.PluginGUID)]
 ```
 
-```csharp
-DearImGuiInjection.DearImGuiInjection.Render += MyUI;
-```
+In `OnEnable`:
 
 ```csharp
+OverlayDearImGui.Overlay.Render += MyUI;
+```
+
+Example Render Function:
+
+```csharp
+private static float _lastRefreshTime = -Mathf.Infinity;
+private static GameObject[] _cachedInstances = Array.Empty<GameObject>();
+
 private static void MyUI()
 {
-    if (DearImGuiInjection.DearImGuiInjection.IsCursorVisible)
+    if (ImGui.BeginMainMenuBar())
     {
-        var dummy = true;
-        ImGui.ShowDemoWindow(ref dummy);
-
-        if (ImGui.BeginMainMenuBar())
+        if (ImGui.BeginMenu("Debug", true))
         {
-            if (ImGui.BeginMenu("MainBar", true))
+            if (ImGui.MenuItem("Open Debug Window", null, _isMyUIOpen))
             {
-                if (ImGui.MenuItemBool("MyTestPlugin", null, false, true))
-                {
-                    _isMyUIOpen ^= true;
-                }
-
-                ImGui.EndMenu();
+                _isMyUIOpen ^= true;
             }
 
-            ImGui.EndMainMenuBar();
+            ImGui.EndMenu();
         }
 
-        if (ImGui.BeginMainMenuBar())
-        {
-            if (ImGui.BeginMenu("MainBar", true))
-            {
-                if (ImGui.MenuItemBool("MyTestPlugin2", null, false, true))
-                {
-                    _isMyUIOpen ^= true;
-                }
-
-                ImGui.EndMenu();
-            }
-
-            ImGui.EndMainMenuBar();
-        }
+        ImGui.EndMainMenuBar();
     }
 
-    if (_isMyUIOpen)
+    if (!_isMyUIOpen)
     {
-        var dummy2 = true;
-        if (ImGui.Begin(Metadata.GUID, ref dummy2, (int)ImGuiWindowFlags.None))
+        return;
+    }
+
+    if (Time.realtimeSinceStartup - _lastRefreshTime >= 2f)
+    {
+        _cachedInstances = UnityEngine.Object.FindObjectsOfType<GameObject>();
+        _lastRefreshTime = Time.realtimeSinceStartup;
+    }
+
+    if (ImGui.Begin("GameObject Debug Viewer", ImGuiWindowFlags.AlwaysAutoResize))
+    {
+        ImGui.Text($"Found {_cachedInstances.Length} GameObject instances:");
+
+        for (int i = 0; i < _cachedInstances.Length; i++)
         {
-            ImGui.Text("hello there");
-
-
-            if (ImGui.Button("Click me", Constants.DefaultVector2))
+            var stuff = _cachedInstances[i];
+            if (stuff == null)
             {
-                // Interacting with the unity api must be done from the unity main thread
-                // Can just use the dispatcher shipped with the library for that
-                UnityMainThreadDispatcher.Enqueue(() =>
-                {
-                    //var go = new GameObject();
-                    //go.AddComponent<Stuff>();
-                });
+                continue;
             }
+
+            var name = stuff.gameObject.name;
+            var pos = stuff.transform.position;
+            var active = stuff.gameObject.activeInHierarchy;
+
+            ImGui.Separator();
+            ImGui.Text($"[{i}] Name: {name}");
+            ImGui.Text($"    Active: {active}");
+            ImGui.Text($"    Position: {pos}");
         }
 
         ImGui.End();
     }
 }
+
 ```
-
-Make sure to only interact with anything `UnityEngine` related from its main thread, easily doable through `UnityMainThreadDispatcher`
-
-```csharp
-if (ImGui.Button("Click me", Constants.DefaultVector2))
-{
-    // Interacting with the unity api must be done from the unity main thread
-    // Can just use the dispatcher shipped with the library for that
-    UnityMainThreadDispatcher.Enqueue(() =>
-    {
-        //var go = new GameObject();
-        //go.AddComponent<Stuff>();
-    });
-}
-```
-
-## Credits
-
-[Sewer56](https://github.com/Sewer56)

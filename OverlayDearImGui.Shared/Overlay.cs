@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ImGuiNET;
 using OverlayDearImGui.Windows;
 using SharpDX.Direct3D;
@@ -24,7 +25,14 @@ public class Overlay
 
     public static event Action OnRender;
 
+    /// Key for switching the overlay visibility.
+    /// </summary>
+    public static IConfigEntry<User32.VirtualKey> OverlayToggle { get; internal set; }
+    internal const User32.VirtualKey OverlayToggleDefault = User32.VirtualKey.VK_INSERT;
+
     public static string AssetsFolderPath { get; private set; } = "";
+    public static string ImGuiIniConfigPath { get; private set; }
+    private const string IniFileName = "OverlayDearImGui_imgui.ini";
 
     public static bool IsOpen { get; private set; }
 
@@ -215,11 +223,14 @@ public class Overlay
         CloneRenderData();
     }
 
-    public unsafe void Render(string windowName, string windowClass)
+    public unsafe void Render(string windowName, string windowClass, string assetsFolderPath, string imguiIniConfigFolderPath, IConfigEntry<User32.VirtualKey> overlayToggleKeybind)
     {
+        ImGuiIniConfigPath = Path.Combine(imguiIniConfigFolderPath, IniFileName);
+        AssetsFolderPath = assetsFolderPath ?? Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Assets");
+        OverlayToggle = overlayToggleKeybind;
+
         GameHwnd = User32.FindWindowW(windowClass, windowName);
 
-        AssetsFolderPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Assets");
 
         User32.GetWindowRect(GameHwnd, out _gameRect);
 
@@ -248,6 +259,8 @@ public class Overlay
         var fontPath = Path.Combine(AssetsFolderPath, "Fonts", "Bombardier-Regular.ttf");
         var font = ImGui.GetIO().Fonts.AddFontFromFileTTF(fontPath, 16);
         ImGui.GetIO().NativePtr->FontDefault = font;
+
+        ImGui.GetIO().NativePtr->IniFilename = (byte*)Marshal.StringToHGlobalAnsi(ImGuiIniConfigPath);
 
         ImGuiWin32Impl.Init(hwnd);
 
