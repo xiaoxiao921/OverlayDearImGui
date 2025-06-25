@@ -44,11 +44,18 @@ jobs:
       run: |
         set -x
 
-        # Find all csproj files that also have a thunderstore.toml next to them.
-        mapfile -t csproj_paths < <(find . -name '*.csproj' -exec test -f "{}/../thunderstore.toml" \; -print)
+        # Find all csproj files with thunderstore.toml next to them
+        mapfile -t csproj_paths < <(
+          find . -name '*.csproj' | while read -r csproj; do
+            dir=$(dirname "$csproj")
+            if [[ -f "$dir/thunderstore.toml" ]]; then
+              echo "$csproj"
+            fi
+          done
+        )
 
         # Sort to ensure OverlayDearImGui.Shared comes first
-        csproj_paths=($(printf '%s\n' "${csproj_paths[@]}" | sort -r | grep OverlayDearImGui.Shared.csproj; printf '%s\n' "${csproj_paths[@]}" | grep -v OverlayDearImGui.Shared.csproj))
+        csproj_paths=($(printf '%s\n' "${csproj_paths[@]}" | grep OverlayDearImGui.Shared.csproj; printf '%s\n' "${csproj_paths[@]}" | grep -v OverlayDearImGui.Shared.csproj))
 
         for csproj in "${csproj_paths[@]}"; do
           dir=$(dirname "$csproj")
