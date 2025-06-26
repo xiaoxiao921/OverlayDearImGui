@@ -19,7 +19,7 @@ public static class WindowFactory
         {
             cbSize = (uint)Marshal.SizeOf<WNDCLASSEXW>(),
             style = 0x0001, // CS_CLASSDC
-            lpfnWndProc = Marshal.GetFunctionPointerForDelegate(Overlay.WndProc),
+            lpfnWndProc = Marshal.GetFunctionPointerForDelegate<Overlay.WndProcDelegate>(Overlay.WndProc),
             hInstance = Kernel32.GetModuleHandle(null),
             lpszClassName = Marshal.StringToHGlobalUni(name)
         };

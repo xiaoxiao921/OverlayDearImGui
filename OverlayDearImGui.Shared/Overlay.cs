@@ -562,6 +562,8 @@ public class Overlay
         }
     }
 
+    public delegate IntPtr WndProcDelegate(IntPtr hWnd, WindowMessage msg, IntPtr wParam, IntPtr lParam);
+
     public static IntPtr WndProc(IntPtr hWnd, WindowMessage msg, IntPtr wParam, IntPtr lParam)
     {
         if (ImGuiWin32Impl.WndProcHandler(hWnd, msg, wParam, lParam) != IntPtr.Zero)
