@@ -36,7 +36,7 @@ public class OverlayDearImGuiMelonIL2CPP : MelonMod
         });
         _renderThread.Start();
 
-        Overlay.OnRender += MyUI;
+        //Overlay.OnRender += MyUI;
     }
 
     public override void OnUpdate()
