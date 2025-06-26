@@ -117,11 +117,11 @@ public static unsafe class ImGuiWin32Impl
     /// <summary>
     /// Processes window messages. Supports both WndProcA and WndProcW.
     /// </summary>
-    /// <param name="hWnd">Handle of the window.</param>
-    /// <param name="msg">Type of window message.</param>
-    /// <param name="wParam">wParam.</param>
-    /// <param name="lParam">lParam.</param>
-    /// <returns>Return value, if not doing further processing.</returns>
+    // <param name="hWnd">Handle of the window.</param>
+    // <param name="msg">Type of window message.</param>
+    // <param name="wParam">wParam.</param>
+    // <param name="lParam">lParam.</param>
+    // <returns>Return value, if not doing further processing.</returns>
     //public static unsafe IntPtr? ProcessWndProcW(IntPtr hWnd, WindowMessage msg, void* wParam, void* lParam)
     //{
     //    if (!ImGui.GetCurrentContext().IsNull)

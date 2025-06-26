@@ -93,7 +93,6 @@ public static partial class User32
     /// <summary>
     /// The RECT structure defines the coordinates of the upper-left and lower-right corners of a rectangle.
     /// </summary>
-    /// <see cref="http://msdn.microsoft.com/en-us/library/dd162897%28VS.85%29.aspx"/>
     /// <remarks>
     /// By convention, the right and bottom edges of the rectangle are normally considered exclusive.
     /// In other words, the pixel whose coordinates are ( right, bottom ) lies immediately outside of the the rectangle.

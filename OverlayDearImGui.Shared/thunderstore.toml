@@ -5,7 +5,7 @@ schemaVersion = "0.0.1"
 [package]
 namespace = "xiaoxiao921"
 name = "OverlayDearImGui_Shared"
-versionNumber = "2.0.0"
+versionNumber = "2.1.0"
 description = "Overlay Window for Dear ImGui"
 websiteUrl = "https://github.com/xiaoxiao921/OverlayDearImGui"
 containsNsfwContent = false

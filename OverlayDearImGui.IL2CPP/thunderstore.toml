@@ -1,0 +1,37 @@
+
+[config]
+schemaVersion = "0.0.1"
+
+[package]
+namespace = "xiaoxiao921"
+name = "OverlayDearImGui_BepInEx5"
+versionNumber = "2.0.0"
+description = "Overlay Window for Dear ImGui"
+websiteUrl = "https://github.com/xiaoxiao921/OverlayDearImGui"
+containsNsfwContent = false
+
+[package.dependencies]
+bbepis-BepInExPack = "5.4.2120"
+xiaoxiao921-OverlayDearImGui_Shared = "2.0.0"
+
+[build]
+icon = "../icon.png"
+readme = "./README.md"
+outdir = "./build"
+
+[[build.copy]]
+source = "./CHANGELOG.md"
+target = "./CHANGELOG.md"
+
+[[build.copy]]
+source = "./ReleaseOutput/OverlayDearImGui.BepInEx5.dll"
+target = "./plugins/OverlayDearImGui.BepInEx5/OverlayDearImGui.BepInEx5.dll"
+
+[[build.copy]]
+source = "./ReleaseOutput/OverlayDearImGui.BepInEx5.xml"
+target = "./plugins/OverlayDearImGui.BepInEx5/OverlayDearImGui.BepInEx5.xml"
+
+[publish]
+repository = "https://thunderstore.io"
+communities = ["riskofrain2"]
+categories = ["libraries"]

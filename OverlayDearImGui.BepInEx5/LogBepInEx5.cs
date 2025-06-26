@@ -1,6 +1,6 @@
 ﻿using BepInEx.Logging;
 
-namespace OverlayDearImGui;
+namespace OverlayDearImGui.BepInEx5;
 
 internal class LogBepInEx5 : ILog
 {

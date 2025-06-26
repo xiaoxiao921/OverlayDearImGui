@@ -16,6 +16,8 @@ using SharedList = OverlayDearImGui.DisposableList<OverlayDearImGui.ClonedDrawDa
 
 [assembly: InternalsVisibleTo("OverlayDearImGui.BepInEx5")]
 
+[assembly: InternalsVisibleTo("OverlayDearImGui.MelonIL2CPP")]
+
 namespace OverlayDearImGui;
 
 public class Overlay

@@ -5,14 +5,14 @@ schemaVersion = "0.0.1"
 [package]
 namespace = "xiaoxiao921"
 name = "OverlayDearImGui_BepInEx5"
-versionNumber = "2.0.0"
+versionNumber = "2.1.0"
 description = "Overlay Window for Dear ImGui"
 websiteUrl = "https://github.com/xiaoxiao921/OverlayDearImGui"
 containsNsfwContent = false
 
 [package.dependencies]
 bbepis-BepInExPack = "5.4.2120"
-xiaoxiao921-OverlayDearImGui_Shared = "2.0.0"
+xiaoxiao921-OverlayDearImGui_Shared = "2.1.0"
 
 [build]
 icon = "../icon.png"

@@ -1,6 +1,6 @@
 ﻿using BepInEx.Configuration;
 
-namespace OverlayDearImGui;
+namespace OverlayDearImGui.BepInEx5;
 
 public class ConfigEntryBepInEx5<T> : IConfigEntry<T>
 {

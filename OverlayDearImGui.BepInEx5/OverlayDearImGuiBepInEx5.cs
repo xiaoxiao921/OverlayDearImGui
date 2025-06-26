@@ -5,9 +5,8 @@ using BepInEx;
 using Hexa.NET.ImGui;
 using OverlayDearImGui.Windows;
 using UnityEngine;
-using static OverlayDearImGui.Windows.User32;
 
-namespace OverlayDearImGui;
+namespace OverlayDearImGui.BepInEx5;
 
 #pragma warning disable CS0436 // Type conflicts with imported type
 [AutoThunderstoreVersion.AutoVersion]
@@ -33,8 +32,6 @@ public partial class OverlayDearImGuiBepInEx5 : BaseUnityPlugin
             "Key for toggling the overlay.")
         );
 
-        Overlay.OnRender += MyUI;
-
         _renderThread = new Thread(() =>
         {
             try
@@ -52,6 +49,8 @@ public partial class OverlayDearImGuiBepInEx5 : BaseUnityPlugin
             }
         });
         _renderThread.Start();
+
+        Overlay.OnRender += MyUI;
     }
 
     private void Update()
