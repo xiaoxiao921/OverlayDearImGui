@@ -15,6 +15,8 @@
 
 		<PackageReference Include="LavaGang.MelonLoader" Version="0.7.1" />
 
+		<PackageReference Include="HarmonyX" Version="2.10.2" />
+
 		<PackageReference Include="Il2CppAssemblyUnhollower.BaseLib" Version="0.4.22" />
 
 		<PackageReference Include="Il2CppInterop.Common" Version="1.0.0" />

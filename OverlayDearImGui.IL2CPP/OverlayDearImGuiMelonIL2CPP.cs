@@ -1,5 +1,8 @@
-﻿using Hexa.NET.ImGui;
+﻿using System.Diagnostics;
+using HarmonyLib;
+using Hexa.NET.ImGui;
 using MelonLoader;
+using MonoMod.RuntimeDetour;
 using OverlayDearImGui.MelonIL2CPP;
 using OverlayDearImGui.Windows;
 using UnityEngine;
@@ -11,12 +14,32 @@ namespace OverlayDearImGui.MelonIL2CPP;
 
 public class OverlayDearImGuiMelonIL2CPP : MelonMod
 {
+    internal static bool VerifyFile(ref (bool, string) __result)
+    {
+        __result = (true, null);
+
+        return false;
+    }
+
     public override void OnInitializeMelon()
     {
         Log.Init(new LogMelon(LoggerInstance));
 
         var category = MelonPreferences.CreateCategory("OverlayDearImGui_MelonIL2CPP");
         var toggleKey = category.CreateEntry("OverlayToggle", Overlay.OverlayToggleDefault, "Key for toggling the overlay.");
+
+        while (!Debugger.IsAttached)
+        {
+            Log.Info("Waiting for debugger attach.");
+            Thread.Sleep(1000);
+        }
+
+        var m1 = AccessTools.Method("MelonLoader.Utils.AssemblyVerifier:VerifyFile");
+        var m2 = AccessTools.Method("OverlayDearImGui.MelonIL2CPP.OverlayDearImGuiMelonIL2CPP:VerifyFile");
+
+        var res = this.HarmonyInstance.Patch(m1, new HarmonyMethod(m2));
+        if (res != null)
+            Log.Info(res);
 
         _renderThread = new Thread(() =>
         {
@@ -42,12 +65,17 @@ public class OverlayDearImGuiMelonIL2CPP : MelonMod
     public override void OnUpdate()
     {
         Overlay.UpdateOverlayDrawData();
+
+        if (ImGui.IsKeyPressed(ImGuiKey.F10))
+        {
+        }
     }
 
     private static bool _isMyUIOpen = true;
 
     private static float _lastRefreshTime = -Mathf.Infinity;
     private static Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppArrayBase<GameObject> _cachedInstances;
+    private Hook _hook;
     private Thread _renderThread;
 
     private static void MyUI()
