@@ -571,6 +571,6 @@ public class Overlay
             return new IntPtr(1);
         }
 
-        return User32.DefWindowProc(hWnd, msg, wParam, lParam);
+        return User32.DefWindowProcW(hWnd, msg, wParam, lParam);
     }
 }

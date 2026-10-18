@@ -155,8 +155,8 @@ public static partial class User32
     /// To get extended error information, call GetLastError.
     ///
     /// </returns>
-    [DllImport("user32.dll")]
-    public static extern bool UnregisterClass(IntPtr lpClassName, IntPtr hInstance);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)][return: MarshalAs(UnmanagedType.Bool)] 
+    public static extern bool UnregisterClass(string lpClassName, IntPtr hInstance);
 
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
@@ -194,8 +194,8 @@ public static partial class User32
     [DllImport("user32.dll")]
     public static extern bool UpdateWindow(IntPtr hWnd);
 
-    [DllImport("user32.dll")]
-    public static extern IntPtr DefWindowProc(IntPtr hWnd, WindowMessage uMsg, IntPtr wParam, IntPtr lParam);
+    [DllImport("user32.dll", EntryPoint = "DefWindowProcW", CharSet = CharSet.Unicode, ExactSpelling = true)]
+    public static extern IntPtr DefWindowProcW(IntPtr hWnd, WindowMessage uMsg, IntPtr wParam, IntPtr lParam);
 
     [DllImport("user32.dll")]
     public static extern void PostQuitMessage(int nExitCode);

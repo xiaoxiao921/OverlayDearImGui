@@ -19,7 +19,8 @@ public struct WNDCLASSEXW
     public IntPtr hbrBackground;
     [MarshalAs(UnmanagedType.LPWStr)]
     public string lpszMenuName;
-    public IntPtr lpszClassName;
+    [MarshalAs(UnmanagedType.LPWStr)]
+    public string lpszClassName;
     public IntPtr hIconSm;
 }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
