@@ -402,6 +402,7 @@ public class Overlay
         var fontPath = Path.Combine(AssetsFolderPath, "Fonts", "Bombardier-Regular.ttf");
         var font = io.Fonts.AddFontFromFileTTF(fontPath, 16);
         io.FontDefault = font;
+        io.Fonts.Build();
 
         ImGuiWin32Impl.Init(hwnd);
 
