@@ -25,14 +25,20 @@ public class OverlayDearImGuiMelonIL2CPP : MelonMod
     {
         Log.Init(new LogMelon(LoggerInstance));
 
+        var overlaySharedFolderPath = Path.GetDirectoryName(typeof(Overlay).Assembly.Location);
+        var cimguidllPath = Path.Combine(overlaySharedFolderPath, "cimgui.dll");
+        var cimguidll = Kernel32.LoadLibrary(cimguidllPath);
+
         var category = MelonPreferences.CreateCategory("OverlayDearImGui_MelonIL2CPP");
         var toggleKey = category.CreateEntry("OverlayToggle", Overlay.OverlayToggleDefault, "Key for toggling the overlay.");
 
+#if DEBUG
         while (!Debugger.IsAttached)
         {
             Log.Info("Waiting for debugger attach.");
             Thread.Sleep(1000);
         }
+#endif
 
         var m1 = AccessTools.Method("MelonLoader.Utils.AssemblyVerifier:VerifyFile");
         var m2 = AccessTools.Method("OverlayDearImGui.MelonIL2CPP.OverlayDearImGuiMelonIL2CPP:VerifyFile");
@@ -46,10 +52,10 @@ public class OverlayDearImGuiMelonIL2CPP : MelonMod
             try
             {
                 new Overlay().Render(null, "UnityWndClass",
-                    Path.Combine(Path.GetDirectoryName(MelonAssembly.Location), "Assets"),
+                    Path.Combine(overlaySharedFolderPath, "Assets"),
                     Path.GetDirectoryName(MelonAssembly.Location),
                     new ConfigEntryMelonIL2CPP<VirtualKey>(toggleKey),
-                    Path.Combine(Path.GetDirectoryName(MelonAssembly.Location), "cimgui.dll")
+                    cimguidll
                 );
             }
             catch (Exception e)

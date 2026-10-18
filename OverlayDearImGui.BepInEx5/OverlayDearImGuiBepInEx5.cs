@@ -26,6 +26,10 @@ public partial class OverlayDearImGuiBepInEx5 : BaseUnityPlugin
     {
         Log.Init(new LogBepInEx5(Logger));
 
+        var overlaySharedFolderPath = Path.GetDirectoryName(typeof(Overlay).Assembly.Location);
+        var cimguiDllPath = Path.Combine(overlaySharedFolderPath, "cimgui.dll");
+        var cimguiDll = Kernel32.LoadLibrary(cimguiDllPath);
+
         var toggleKey = new ConfigEntryBepInEx5<VirtualKey>(
             Config.Bind("Keybinds", "OverlayToggle",
             Overlay.OverlayToggleDefault,
@@ -37,10 +41,10 @@ public partial class OverlayDearImGuiBepInEx5 : BaseUnityPlugin
             try
             {
                 new Overlay().Render(null, "UnityWndClass",
-                    Path.Combine(Path.GetDirectoryName(Info.Location), "Assets"),
+                    Path.Combine(overlaySharedFolderPath, "Assets"),
                     Paths.ConfigPath,
                     toggleKey,
-                    Path.Combine(Path.GetDirectoryName(Info.Location), "cimgui.dll")
+                    cimguiDll
                 );
             }
             catch (Exception e)

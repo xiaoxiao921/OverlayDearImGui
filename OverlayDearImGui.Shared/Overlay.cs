@@ -357,12 +357,12 @@ public class Overlay
     //    viewport.RendererUserData = (void*)(IntPtr)data;
     //}
 
-    public unsafe void Render(string windowName, string windowClass, string assetsFolderPath, string imguiIniConfigFolderPath, IConfigEntry<VirtualKey> overlayToggleKeybind, string cimguiDllFilePath)
+    public unsafe void Render(string windowName, string windowClass, string assetsFolderPath, string imguiIniConfigFolderPath, IConfigEntry<VirtualKey> overlayToggleKeybind, nint cimguiDllptr)
     {
-        ImGui.InitApi(new NativeLibraryContext(Kernel32.LoadLibrary(cimguiDllFilePath)));
+        ImGui.InitApi(new NativeLibraryContext(cimguiDllptr));
 
         ImGuiIniConfigPath = Path.Combine(imguiIniConfigFolderPath, IniFileName);
-        AssetsFolderPath = assetsFolderPath ?? Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Assets");
+        AssetsFolderPath = assetsFolderPath;
         OverlayToggle = overlayToggleKeybind;
 
         GameHwnd = User32.FindWindowW(windowClass, windowName);
