@@ -18,7 +18,7 @@ public static class WindowFactory
         WNDCLASSEXW wc = new()
         {
             cbSize = (uint)Marshal.SizeOf<WNDCLASSEXW>(),
-            style = 0x0001, // CS_CLASSDC
+            style = User32.CS_HREDRAW | User32.CS_VREDRAW,
             lpfnWndProc = Marshal.GetFunctionPointerForDelegate<Overlay.WndProcDelegate>(Overlay.WndProc),
             hInstance = Kernel32.GetModuleHandle(null),
             lpszClassName = name
@@ -32,15 +32,15 @@ public static class WindowFactory
             return (IntPtr.Zero, default);
         }
 
-        var hwnd = User32.CreateWindowW(
+        var hwnd = User32.CreateWindowExW(
+            User32.WindowStylesEx.WS_EX_LAYERED,
             name,
             "Overlay",
-            WS_POPUP,
+            User32.WindowStyles.WS_POPUP,
             Overlay.GameRect.X, Overlay.GameRect.Y,
             Overlay.GameRect.Width, Overlay.GameRect.Height,
             IntPtr.Zero, IntPtr.Zero, wc.hInstance, IntPtr.Zero
         );
-
 
         if (hwnd == IntPtr.Zero)
         {
@@ -48,6 +48,14 @@ public static class WindowFactory
             Log.Error($"CreateWindowExW failed: 0x{error:X8}");
             return (IntPtr.Zero, default);
         }
+
+        User32.WindowStylesEx gwl =
+                    (User32.WindowStylesEx)User32.GetWindowLongPtr(hwnd, User32.GWL_EXSTYLE);
+        User32.WindowStylesEx style = gwl | User32.WindowStylesEx.WS_EX_LAYERED;
+        User32.SetWindowLongPtr(hwnd, User32.GWL_EXSTYLE,
+                                     (IntPtr)style);
+
+        User32.SetLayeredWindowAttributes(hwnd, 0, 255, 0x2);
 
         return (hwnd, wc);
     }
